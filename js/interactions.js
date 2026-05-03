@@ -1,14 +1,29 @@
 (function initInteractions(app) {
-  const { GRID_SIZE, MIN_CARD_HEIGHT_UNITS, MIN_CARD_WIDTH_UNITS, ZOOM_MAX, ZOOM_MIN, ZOOM_STEP } = app.constants;
+  const {
+    DEFAULT_CARD_HEIGHT_UNITS,
+    DEFAULT_CARD_WIDTH_UNITS,
+    GRID_SIZE,
+    MIN_CARD_HEIGHT_UNITS,
+    MIN_CARD_WIDTH_UNITS,
+    VALID_CARD_TYPES,
+    ZOOM_MAX,
+    ZOOM_MIN,
+    ZOOM_STEP,
+  } = app.constants;
   const {
     addCardButton,
     cancelConfigButton,
+    cancelImportButton,
+    cardContextMenu,
     cardLayer,
     cardList,
     closeConfigButton,
+    closeImportButton,
+    confirmImportButton,
     dashboard,
     exportButton,
     heightInput,
+    importContentInput,
     importButton,
     saveConfigButton,
     secretInput,
@@ -33,6 +48,7 @@
     snap,
     syncDraftFromInputs,
   } = app.cardModel;
+  const PARTIAL_EXPORT_TYPE = "utilpage.partial-card.v1";
 
   function normalizeUrl(url) {
     const trimmedUrl = url.trim();
@@ -46,17 +62,14 @@
     window.open(url, "_blank", "noopener,noreferrer");
   }
 
-  async function copySecretCard(card) {
-    const secret = card.secret ?? "";
-    if (!secret) return;
-
+  async function copyText(text) {
     if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(secret);
+      await navigator.clipboard.writeText(text);
       return;
     }
 
     const textArea = document.createElement("textarea");
-    textArea.value = secret;
+    textArea.value = text;
     textArea.setAttribute("readonly", "");
     textArea.style.position = "fixed";
     textArea.style.left = "-9999px";
@@ -64,6 +77,12 @@
     textArea.select();
     document.execCommand("copy");
     textArea.remove();
+  }
+
+  async function copySecretCard(card) {
+    const secret = card.secret ?? "";
+    if (!secret) return;
+    await copyText(secret);
   }
 
   function showToast(message) {
@@ -137,6 +156,26 @@
     render();
   }
 
+  function openImportModal() {
+    hideContextMenu(false);
+    state.importModalOpen = true;
+    state.importContent = "";
+    render();
+    importContentInput.focus();
+  }
+
+  function closeImportModal() {
+    state.importModalOpen = false;
+    state.importContent = "";
+    render();
+  }
+
+  function hideContextMenu(shouldRender = true) {
+    if (!state.contextMenu) return;
+    state.contextMenu = null;
+    if (shouldRender) render();
+  }
+
   function saveConfig() {
     if (!state.configMode) return;
 
@@ -178,6 +217,12 @@
       return;
     }
 
+    render();
+  }
+
+  function toggleCardMutability(card) {
+    card.isMutable = !card.isMutable;
+    saveStoredState();
     render();
   }
 
@@ -300,7 +345,7 @@
   }
 
   function startDashboardPan(event) {
-    if (event.button !== 0 || event.target.closest(".card, .util-modal, .config-modal")) return;
+    if (event.button !== 0 || event.target.closest(".card, .util-modal, .config-modal, .card-context-menu")) return;
     state.activeInteraction = {
       type: "pan",
       pointerId: event.pointerId,
@@ -328,6 +373,7 @@
     if (!card) return;
 
     state.selectedId = card.id;
+    hideContextMenu(false);
     const actionTarget = event.target.closest("[data-action]");
     const action = actionTarget?.dataset.action;
 
@@ -347,9 +393,7 @@
     if (action === "toggle-mutability") {
       event.preventDefault();
       event.stopPropagation();
-      card.isMutable = !card.isMutable;
-      saveStoredState();
-      render();
+      toggleCardMutability(card);
       return;
     }
 
@@ -510,6 +554,89 @@
     render();
   }
 
+  function cardTreeExportData(cardId) {
+    const ids = descendantIds(cardId);
+    ids.add(cardId);
+
+    return {
+      type: PARTIAL_EXPORT_TYPE,
+      rootId: cardId,
+      cards: state.cards.filter((card) => ids.has(card.id)),
+      collapsedBoardIds: [...state.collapsedBoardIds].filter((id) => ids.has(id)),
+      collapsedBoardCardIds: [...state.collapsedBoardCardIds].filter((id) => ids.has(id)),
+    };
+  }
+
+  async function exportPartialCard(cardId) {
+    const card = state.cards.find((item) => item.id === cardId);
+    if (!card) return;
+
+    try {
+      await copyText(JSON.stringify(cardTreeExportData(card.id)));
+      showToast("Card exported to clipboard");
+    } catch {
+      showToast("Export failed");
+    }
+  }
+
+  function importedNumber(value, fallback) {
+    return Number.isFinite(Number(value)) ? Number(value) : fallback;
+  }
+
+  function normalizeImportedCard(card, id, parentId, position = null) {
+    const type = VALID_CARD_TYPES.has(card.type) ? card.type : "text";
+
+    return {
+      id,
+      parentId,
+      type,
+      title: typeof card.title === "string" && card.title.trim() ? card.title : "Untitled",
+      content: type === "text" && typeof card.content === "string" ? card.content : "",
+      url: type === "link" && typeof card.url === "string" ? card.url : "",
+      secret: type === "secret" && typeof card.secret === "string" ? card.secret : "",
+      isMutable: typeof card.isMutable === "boolean" ? card.isMutable : true,
+      x: position?.x ?? importedNumber(card.x, 0),
+      y: position?.y ?? importedNumber(card.y, 0),
+      width: Math.max(MIN_CARD_WIDTH_UNITS, importedNumber(card.width, DEFAULT_CARD_WIDTH_UNITS)),
+      height: Math.max(MIN_CARD_HEIGHT_UNITS, importedNumber(card.height, DEFAULT_CARD_HEIGHT_UNITS)),
+    };
+  }
+
+  function importPartialData(data) {
+    if (data?.type !== PARTIAL_EXPORT_TYPE || !Array.isArray(data.cards) || typeof data.rootId !== "string") {
+      throw new Error("Invalid partial export data");
+    }
+
+    const sourceCards = data.cards.filter((card) => typeof card?.id === "string");
+    const sourceIds = new Set(sourceCards.map((card) => card.id));
+    const rootSource = sourceCards.find((card) => card.id === data.rootId);
+    if (!rootSource) throw new Error("Missing root card");
+
+    const idMap = new Map(sourceCards.map((card) => [card.id, crypto.randomUUID()]));
+    const rootPreview = normalizeImportedCard(rootSource, idMap.get(rootSource.id), null);
+    const rootPosition = findEmptyCardPosition(rootPreview.width, rootPreview.height);
+    const importedCards = sourceCards.map((card) => {
+      const parentId = card.id === data.rootId || !sourceIds.has(card.parentId) ? null : idMap.get(card.parentId);
+      const position = card.id === data.rootId ? rootPosition : null;
+      return normalizeImportedCard(card, idMap.get(card.id), parentId, position);
+    });
+
+    state.cards.push(...importedCards);
+    state.selectedId = idMap.get(data.rootId);
+
+    if (Array.isArray(data.collapsedBoardIds)) {
+      data.collapsedBoardIds.forEach((id) => {
+        if (idMap.has(id)) state.collapsedBoardIds.add(idMap.get(id));
+      });
+    }
+
+    if (Array.isArray(data.collapsedBoardCardIds)) {
+      data.collapsedBoardCardIds.forEach((id) => {
+        if (idMap.has(id)) state.collapsedBoardCardIds.add(idMap.get(id));
+      });
+    }
+  }
+
   async function exportDashboard() {
     const data = JSON.stringify({
       cards: state.cards,
@@ -521,31 +648,97 @@
     });
 
     try {
-      await navigator.clipboard.writeText(data);
+      await copyText(data);
       showToast("Exported to clipboard");
     } catch {
       showToast("Export failed");
     }
   }
 
-  async function importDashboard() {
-    let text;
-    try {
-      text = await navigator.clipboard.readText();
-    } catch {
-      showToast("Clipboard access denied");
+  function confirmImport() {
+    const text = importContentInput.value.trim();
+    if (!text) {
+      showToast("Import failed: empty content");
       return;
     }
 
     try {
       const data = JSON.parse(text);
-      if (typeof data !== "object" || data === null) throw new Error("Invalid data");
-      importStateData(data);
+      if (data?.type === PARTIAL_EXPORT_TYPE) {
+        importPartialData(data);
+      } else {
+        if (typeof data !== "object" || data === null) throw new Error("Invalid data");
+        importStateData(data);
+      }
       saveStoredState();
+      state.importModalOpen = false;
+      state.importContent = "";
       render();
-      showToast("Imported from clipboard");
+      showToast(data?.type === PARTIAL_EXPORT_TYPE ? "Imported card" : "Imported dashboard");
     } catch {
       showToast("Import failed: invalid data");
+    }
+  }
+
+  function openCardContextMenu(event, cardId) {
+    if (!state.cards.some((card) => card.id === cardId)) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    state.selectedId = cardId;
+    state.contextMenu = {
+      cardId,
+      x: event.clientX,
+      y: event.clientY,
+    };
+    saveStoredState();
+    render();
+  }
+
+  function showCardHeaderContextMenu(event) {
+    const header = event.target.closest(".card__header");
+    const cardElement = header?.closest(".card");
+    if (!cardElement) return;
+
+    openCardContextMenu(event, cardElement.dataset.cardId);
+  }
+
+  function showCardListContextMenu(event) {
+    const item = event.target.closest(".card-list__item");
+    if (!item) return;
+
+    openCardContextMenu(event, item.dataset.cardId);
+  }
+
+  function handleContextMenuClick(event) {
+    const button = event.target.closest("[data-action]");
+    const cardId = state.contextMenu?.cardId;
+    const card = cardId ? state.cards.find((item) => item.id === cardId) : null;
+    if (!button || !card || button.disabled) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    const action = button.dataset.action;
+    hideContextMenu(false);
+
+    if (action === "edit") {
+      if (card.isMutable) openEditConfig(card.id);
+      return;
+    }
+
+    if (action === "remove") {
+      if (card.isMutable) removeCard(card.id);
+      return;
+    }
+
+    if (action === "toggle-mutability") {
+      toggleCardMutability(card);
+      return;
+    }
+
+    if (action === "export-partial") {
+      render();
+      exportPartialCard(card.id).catch((error) => console.warn("Failed to export card.", error));
     }
   }
 
@@ -553,6 +746,8 @@
     dashboard.addEventListener("pointerdown", startDashboardPan);
     dashboard.addEventListener("wheel", handleDashboardWheel, { passive: false });
     cardLayer.addEventListener("pointerdown", startCardInteraction);
+    cardLayer.addEventListener("contextmenu", showCardHeaderContextMenu);
+    cardContextMenu.addEventListener("click", handleContextMenuClick);
     window.addEventListener("pointermove", moveInteraction);
     window.addEventListener("pointerup", endInteraction);
     window.addEventListener("pointercancel", endInteraction);
@@ -564,7 +759,13 @@
     zoomInButton.addEventListener("click", () => setZoom(state.zoom + ZOOM_STEP));
     zoomOutButton.addEventListener("click", () => setZoom(state.zoom - ZOOM_STEP));
     exportButton.addEventListener("click", exportDashboard);
-    importButton.addEventListener("click", importDashboard);
+    importButton.addEventListener("click", openImportModal);
+    closeImportButton.addEventListener("click", closeImportModal);
+    cancelImportButton.addEventListener("click", closeImportModal);
+    confirmImportButton.addEventListener("click", confirmImport);
+    importContentInput.addEventListener("input", () => {
+      state.importContent = importContentInput.value;
+    });
 
     typeInput.addEventListener("input", () => {
       syncDraftFromInputs();
@@ -590,9 +791,17 @@
       saveStoredState();
       render();
     });
+    cardList.addEventListener("contextmenu", showCardListContextMenu);
 
     window.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") closeConfig();
+      if (event.key === "Escape") {
+        hideContextMenu(false);
+        closeConfig();
+        closeImportModal();
+      }
+    });
+    window.addEventListener("pointerdown", (event) => {
+      if (!event.target.closest(".card-context-menu")) hideContextMenu();
     });
     window.addEventListener("resize", applyPan);
   }

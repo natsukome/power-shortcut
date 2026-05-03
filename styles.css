@@ -474,6 +474,51 @@ textarea {
   display: none;
 }
 
+.card-context-menu {
+  position: fixed;
+  z-index: 30;
+  display: grid;
+  min-width: 130px;
+  padding: 4px;
+  border: 1px solid var(--panel-border);
+  border-radius: 7px;
+  background: #ffffff;
+  box-shadow: 0 14px 34px rgba(27, 42, 65, 0.18);
+  gap: 2px;
+}
+
+.card-context-menu.is-hidden {
+  display: none;
+}
+
+.card-context-menu__item {
+  width: 100%;
+  min-height: 28px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: left;
+}
+
+.card-context-menu__item:hover {
+  background: #eef3f8;
+}
+
+.card-context-menu__item:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.card-context-menu__item:disabled:hover {
+  background: transparent;
+}
+
 .zoom-controls {
   position: fixed;
   right: 20px;
@@ -687,9 +732,9 @@ textarea {
 }
 
 .card-list__item {
-  display: grid;
+  display: block;
   width: 100%;
-  min-height: 34px;
+  min-height: 28px;
   padding: 5px 7px 5px calc(7px + var(--card-list-depth, 0) * 14px);
   border: 1px solid transparent;
   border-radius: 6px;
@@ -697,7 +742,6 @@ textarea {
   cursor: pointer;
   position: relative;
   text-align: left;
-  gap: 1px;
 }
 
 .card-list__item.is-nested::before {
@@ -758,6 +802,7 @@ textarea {
 }
 
 .card-list__title {
+  flex: 1 1 auto;
   overflow: hidden;
   min-width: 0;
   font-size: 12px;
@@ -767,8 +812,10 @@ textarea {
 }
 
 .card-list__meta {
+  flex: 0 0 auto;
   color: var(--muted);
   font-size: 10px;
+  white-space: nowrap;
 }
 
 @media (max-width: 720px) {

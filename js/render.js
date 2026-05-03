@@ -2,6 +2,7 @@
   const { CARD_LAYER_OFFSET, GRID_SIZE } = app.constants;
   const {
     cardConfigModal,
+    cardContextMenu,
     cardCount,
     cardLayer,
     cardList,
@@ -11,6 +12,8 @@
     dashboardToast,
     gridLayer,
     heightInput,
+    importContentInput,
+    importModal,
     saveConfigButton,
     secretField,
     secretInput,
@@ -32,6 +35,8 @@
     renderCards();
     renderCardList();
     renderConfigModal();
+    renderImportModal();
+    renderCardContextMenu();
     renderToast();
   }
 
@@ -234,7 +239,8 @@
     meta.className = "card-list__meta";
     meta.textContent = `${card.type} | ${card.width * GRID_SIZE}x${card.height * GRID_SIZE}px`;
 
-    item.append(header, meta);
+    header.append(meta);
+    item.append(header);
     return isCollapsed ? [item] : [item, ...children.flatMap((child) => createCardListRows(child, depth + 1))];
   }
 
@@ -257,6 +263,43 @@
     secretInput.value = state.draft.secret ?? "";
     widthInput.value = state.draft.width;
     heightInput.value = state.draft.height;
+  }
+
+  function renderImportModal() {
+    importModal.classList.toggle("is-hidden", !state.importModalOpen);
+    if (!state.importModalOpen) return;
+
+    if (importContentInput.value !== state.importContent) {
+      importContentInput.value = state.importContent;
+    }
+  }
+
+  function createContextMenuButton(action, label, disabled = false) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "card-context-menu__item";
+    button.dataset.action = action;
+    button.textContent = label;
+    button.disabled = disabled;
+    return button;
+  }
+
+  function renderCardContextMenu() {
+    const menuState = state.contextMenu;
+    const card = menuState ? state.cards.find((item) => item.id === menuState.cardId) : null;
+
+    cardContextMenu.classList.toggle("is-hidden", !card);
+    cardContextMenu.replaceChildren();
+    if (!card || !menuState) return;
+
+    cardContextMenu.style.left = `${menuState.x}px`;
+    cardContextMenu.style.top = `${menuState.y}px`;
+    cardContextMenu.append(
+      createContextMenuButton("edit", "Edit", !card.isMutable),
+      createContextMenuButton("remove", "Remove", !card.isMutable),
+      createContextMenuButton("toggle-mutability", card.isMutable ? "Lock" : "Unlock"),
+      createContextMenuButton("export-partial", "Export"),
+    );
   }
 
   app.rendering = {

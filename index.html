@@ -17,6 +17,7 @@
       <button id="zoomInButton" class="zoom-button" type="button" aria-label="Zoom in">+</button>
     </div>
     <div id="dashboardToast" class="dashboard-toast is-hidden" role="status" aria-live="polite"></div>
+    <nav id="cardContextMenu" class="card-context-menu is-hidden" aria-label="Card actions"></nav>
 
     <aside class="util-modal" aria-label="Utility controls">
       <header class="util-modal__header">
@@ -88,6 +89,29 @@
         <div class="editor__actions">
           <button id="cancelConfigButton" class="button" type="button">Cancel</button>
           <button id="saveConfigButton" class="button button--primary" type="button">Add</button>
+        </div>
+      </section>
+    </aside>
+
+    <aside id="importModal" class="config-modal is-hidden" aria-label="Import content">
+      <header class="config-modal__header">
+        <div>
+          <h2>Import content</h2>
+          <p>Paste exported card or dashboard data</p>
+        </div>
+        <button id="closeImportButton" class="icon-button" type="button" aria-label="Close import content">
+          x
+        </button>
+      </header>
+
+      <section class="editor" aria-label="Import editor">
+        <label>
+          Content
+          <textarea id="importContentInput" rows="8"></textarea>
+        </label>
+        <div class="editor__actions">
+          <button id="cancelImportButton" class="button" type="button">Cancel</button>
+          <button id="confirmImportButton" class="button button--primary" type="button">Import</button>
         </div>
       </section>
     </aside>
