@@ -6,6 +6,7 @@
     GRID_SIZE,
     MIN_CARD_HEIGHT_UNITS,
     MIN_CARD_WIDTH_UNITS,
+    VALID_COLOR_THEMES,
     VALID_CARD_TYPES,
     ZOOM_MAX,
     ZOOM_MIN,
@@ -21,6 +22,7 @@
     cardList,
     closeConfigButton,
     closeImportButton,
+    colorThemeInput,
     confirmImportButton,
     dashboard,
     exportButton,
@@ -163,6 +165,7 @@
     state.draft = {
       type: card.type,
       title: card.title,
+      colorTheme: VALID_COLOR_THEMES.has(card.colorTheme) ? card.colorTheme : defaultColorTheme(card.type),
       content: card.content,
       url: card.url ?? "",
       localPath: card.localPath ?? "",
@@ -632,6 +635,14 @@
     return Number.isFinite(Number(value)) ? Number(value) : fallback;
   }
 
+  function defaultColorTheme(type) {
+    if (type === "board" || type === "local-link") return "teal";
+    if (type === "link") return "violet";
+    if (type === "secret") return "orange";
+    if (type === "text") return "blue";
+    return "slate";
+  }
+
   function normalizeImportedCard(card, id, parentId, position = null) {
     const type = VALID_CARD_TYPES.has(card.type) ? card.type : "text";
 
@@ -640,6 +651,7 @@
       parentId,
       type,
       title: typeof card.title === "string" && card.title.trim() ? card.title : "Untitled",
+      colorTheme: VALID_COLOR_THEMES.has(card.colorTheme) ? card.colorTheme : defaultColorTheme(type),
       content: type === "text" && typeof card.content === "string" ? card.content : "",
       url: type === "link" && typeof card.url === "string" ? card.url : "",
       localPath: type === "local-link" && typeof card.localPath === "string" ? card.localPath : "",
@@ -850,6 +862,7 @@
       syncDraftFromInputs();
       renderConfigModal();
     });
+    colorThemeInput.addEventListener("input", syncDraftFromInputs);
     titleInput.addEventListener("input", syncDraftFromInputs);
     contentInput.addEventListener("input", syncDraftFromInputs);
     urlInput.addEventListener("input", syncDraftFromInputs);

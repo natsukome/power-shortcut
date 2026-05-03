@@ -5,6 +5,7 @@
     MIN_CARD_HEIGHT_UNITS,
     MIN_CARD_WIDTH_UNITS,
     STORAGE_KEY,
+    VALID_COLOR_THEMES,
     VALID_CARD_TYPES,
     ZOOM_MAX,
     ZOOM_MIN,
@@ -31,6 +32,14 @@
     },
   };
 
+  function defaultColorTheme(type) {
+    if (type === "board" || type === "local-link") return "teal";
+    if (type === "link") return "violet";
+    if (type === "secret") return "orange";
+    if (type === "text") return "blue";
+    return "slate";
+  }
+
   function applyStateData(storedState) {
     const cards = Array.isArray(storedState.cards) ? storedState.cards : [];
     const pan = storedState.pan ?? {};
@@ -47,6 +56,9 @@
         localPath: typeof card.localPath === "string" ? card.localPath : "",
         localLinkMode: card.localLinkMode === "text" ? "text" : "app",
         secret: typeof card.secret === "string" ? card.secret : "",
+        colorTheme: VALID_COLOR_THEMES.has(card.colorTheme)
+          ? card.colorTheme
+          : defaultColorTheme(VALID_CARD_TYPES.has(card.type) ? card.type : "text"),
         isMutable: typeof card.isMutable === "boolean" ? card.isMutable : true,
         x: Number.isFinite(Number(card.x)) ? Number(card.x) : 0,
         y: Number.isFinite(Number(card.y)) ? Number(card.y) : 0,

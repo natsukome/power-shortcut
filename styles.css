@@ -155,6 +155,166 @@ textarea {
   --card-type-text: #c2410c;
 }
 
+.card--theme-slate {
+  --card-accent: #64748b;
+  --card-header-bg: #f8fafc;
+  --card-surface: #ffffff;
+  --card-border-color: #cbd5e1;
+  --card-selected-ring: rgba(100, 116, 139, 0.24);
+  --card-type-bg: #e2e8f0;
+  --card-type-text: #475569;
+}
+
+.card--theme-zinc {
+  --card-accent: #52525b;
+  --card-header-bg: #fafafa;
+  --card-surface: #ffffff;
+  --card-border-color: #d4d4d8;
+  --card-selected-ring: rgba(82, 82, 91, 0.24);
+  --card-type-bg: #e4e4e7;
+  --card-type-text: #3f3f46;
+}
+
+.card--theme-red {
+  --card-accent: #dc2626;
+  --card-header-bg: #fef2f2;
+  --card-surface: #ffffff;
+  --card-border-color: #fca5a5;
+  --card-selected-ring: rgba(220, 38, 38, 0.22);
+  --card-type-bg: #fee2e2;
+  --card-type-text: #b91c1c;
+}
+
+.card--theme-orange {
+  --card-accent: #c2410c;
+  --card-header-bg: #fff7ed;
+  --card-surface: #ffffff;
+  --card-border-color: #fdba74;
+  --card-selected-ring: rgba(194, 65, 12, 0.22);
+  --card-type-bg: #ffedd5;
+  --card-type-text: #c2410c;
+}
+
+.card--theme-amber {
+  --card-accent: #b45309;
+  --card-header-bg: #fffbeb;
+  --card-surface: #ffffff;
+  --card-border-color: #fcd34d;
+  --card-selected-ring: rgba(180, 83, 9, 0.22);
+  --card-type-bg: #fef3c7;
+  --card-type-text: #92400e;
+}
+
+.card--theme-yellow {
+  --card-accent: #a16207;
+  --card-header-bg: #fefce8;
+  --card-surface: #ffffff;
+  --card-border-color: #fde047;
+  --card-selected-ring: rgba(161, 98, 7, 0.22);
+  --card-type-bg: #fef9c3;
+  --card-type-text: #854d0e;
+}
+
+.card--theme-lime {
+  --card-accent: #4d7c0f;
+  --card-header-bg: #f7fee7;
+  --card-surface: #ffffff;
+  --card-border-color: #bef264;
+  --card-selected-ring: rgba(77, 124, 15, 0.22);
+  --card-type-bg: #ecfccb;
+  --card-type-text: #3f6212;
+}
+
+.card--theme-green {
+  --card-accent: #15803d;
+  --card-header-bg: #f0fdf4;
+  --card-surface: #ffffff;
+  --card-border-color: #86efac;
+  --card-selected-ring: rgba(21, 128, 61, 0.22);
+  --card-type-bg: #dcfce7;
+  --card-type-text: #166534;
+}
+
+.card--theme-teal {
+  --card-accent: #0f766e;
+  --card-header-bg: #f0fdfa;
+  --card-surface: #ffffff;
+  --card-border-color: #99f6e4;
+  --card-selected-ring: rgba(15, 118, 110, 0.22);
+  --card-type-bg: #ccfbf1;
+  --card-type-text: #0f766e;
+}
+
+.card--theme-cyan {
+  --card-accent: #0e7490;
+  --card-header-bg: #ecfeff;
+  --card-surface: #ffffff;
+  --card-border-color: #67e8f9;
+  --card-selected-ring: rgba(14, 116, 144, 0.22);
+  --card-type-bg: #cffafe;
+  --card-type-text: #155e75;
+}
+
+.card--theme-sky {
+  --card-accent: #0369a1;
+  --card-header-bg: #f0f9ff;
+  --card-surface: #ffffff;
+  --card-border-color: #7dd3fc;
+  --card-selected-ring: rgba(3, 105, 161, 0.22);
+  --card-type-bg: #e0f2fe;
+  --card-type-text: #075985;
+}
+
+.card--theme-blue {
+  --card-accent: #2563eb;
+  --card-header-bg: #eff6ff;
+  --card-surface: #ffffff;
+  --card-border-color: #93c5fd;
+  --card-selected-ring: rgba(37, 99, 235, 0.22);
+  --card-type-bg: #dbeafe;
+  --card-type-text: #1d4ed8;
+}
+
+.card--theme-indigo {
+  --card-accent: #4f46e5;
+  --card-header-bg: #eef2ff;
+  --card-surface: #ffffff;
+  --card-border-color: #a5b4fc;
+  --card-selected-ring: rgba(79, 70, 229, 0.22);
+  --card-type-bg: #e0e7ff;
+  --card-type-text: #4338ca;
+}
+
+.card--theme-violet {
+  --card-accent: #7c3aed;
+  --card-header-bg: #f5f3ff;
+  --card-surface: #ffffff;
+  --card-border-color: #c4b5fd;
+  --card-selected-ring: rgba(124, 58, 237, 0.22);
+  --card-type-bg: #ede9fe;
+  --card-type-text: #6d28d9;
+}
+
+.card--theme-fuchsia {
+  --card-accent: #c026d3;
+  --card-header-bg: #fdf4ff;
+  --card-surface: #ffffff;
+  --card-border-color: #f0abfc;
+  --card-selected-ring: rgba(192, 38, 211, 0.22);
+  --card-type-bg: #fae8ff;
+  --card-type-text: #a21caf;
+}
+
+.card--theme-rose {
+  --card-accent: #e11d48;
+  --card-header-bg: #fff1f2;
+  --card-surface: #ffffff;
+  --card-border-color: #fda4af;
+  --card-selected-ring: rgba(225, 29, 72, 0.22);
+  --card-type-bg: #ffe4e6;
+  --card-type-text: #be123c;
+}
+
 .card.is-selected {
   border-color: var(--card-accent);
   box-shadow:

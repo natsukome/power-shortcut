@@ -1,5 +1,6 @@
 (function initDom(app) {
   const typeInput = document.querySelector("#typeInput");
+  const colorThemeInput = document.querySelector("#colorThemeInput");
   const contentInput = document.querySelector("#contentInput");
   const urlInput = document.querySelector("#urlInput");
   const localPathInput = document.querySelector("#localPathInput");
@@ -26,6 +27,8 @@
     configCardMeta: document.querySelector("#configCardMeta"),
     typeInput,
     typeField: typeInput.closest("label"),
+    colorThemeInput,
+    colorThemeField: colorThemeInput.closest("label"),
     titleInput: document.querySelector("#titleInput"),
     contentInput,
     contentField: contentInput.closest("label"),

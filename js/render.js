@@ -6,6 +6,8 @@
     cardCount,
     cardLayer,
     cardList,
+    colorThemeField,
+    colorThemeInput,
     configCardMeta,
     contentField,
     contentInput,
@@ -115,7 +117,7 @@
     const isBoardCollapsed = card.type === "board" && state.collapsedBoardCardIds.has(card.id);
     const canResize = card.isMutable && card.type !== "link" && card.type !== "local-link" && card.type !== "secret";
 
-    element.className = `card card--${card.type}${card.isMutable ? "" : " card--immutable"}${
+    element.className = `card card--${card.type} card--theme-${card.colorTheme ?? "slate"}${card.isMutable ? "" : " card--immutable"}${
       isBoardCollapsed ? " is-collapsed" : ""
     }${
       card.id === state.selectedId ? " is-selected" : ""
@@ -306,12 +308,14 @@
     configCardMeta.textContent = state.configMode === "create" ? "New card" : "Edit card";
     saveConfigButton.textContent = state.configMode === "create" ? "Add" : "Save";
     typeField.hidden = state.configMode === "edit";
+    colorThemeField.hidden = false;
     contentField.hidden = state.draft.type !== "text";
     urlField.hidden = state.draft.type !== "link";
     localPathField.hidden = state.draft.type !== "local-link";
     localLinkModeField.hidden = state.draft.type !== "local-link";
     secretField.hidden = state.draft.type !== "secret";
     typeInput.value = state.draft.type;
+    colorThemeInput.value = state.draft.colorTheme ?? "slate";
     titleInput.value = state.draft.title;
     contentInput.value = state.draft.content;
     urlInput.value = state.draft.url ?? "";

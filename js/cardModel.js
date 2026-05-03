@@ -9,9 +9,11 @@
     MIN_CARD_WIDTH_UNITS,
     PLACEMENT_GAP_UNITS,
     PLACEMENT_SEARCH_RADIUS_UNITS,
+    VALID_COLOR_THEMES,
     VALID_CARD_TYPES,
   } = app.constants;
   const {
+    colorThemeInput,
     contentInput,
     heightInput,
     localLinkModeInput,
@@ -33,6 +35,7 @@
     return {
       type: "text",
       title: `Card ${index}`,
+      colorTheme: "blue",
       content: "",
       url: "",
       localPath: "",
@@ -48,6 +51,7 @@
     return {
       type,
       title: titleInput.value.trim() || "Untitled",
+      colorTheme: VALID_COLOR_THEMES.has(colorThemeInput.value) ? colorThemeInput.value : "slate",
       content: type === "text" ? contentInput.value : "",
       url: type === "link" ? urlInput.value.trim() : "",
       localPath: type === "local-link" ? localPathInput.value.trim() : "",
