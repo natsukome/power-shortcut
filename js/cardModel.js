@@ -2,6 +2,8 @@
   const {
     DEFAULT_CARD_HEIGHT_UNITS,
     DEFAULT_CARD_WIDTH_UNITS,
+    DASHBOARD_HEIGHT_UNITS,
+    DASHBOARD_WIDTH_UNITS,
     GRID_SIZE,
     MIN_CARD_HEIGHT_UNITS,
     MIN_CARD_WIDTH_UNITS,
@@ -47,6 +49,20 @@
     state.draft = normalizeDraft();
   }
 
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function clampDashboardCard(card) {
+    if (card.parentId !== null) return card;
+
+    card.width = Math.min(DASHBOARD_WIDTH_UNITS, Math.max(MIN_CARD_WIDTH_UNITS, card.width));
+    card.height = Math.min(DASHBOARD_HEIGHT_UNITS, Math.max(MIN_CARD_HEIGHT_UNITS, card.height));
+    card.x = clamp(card.x, 0, Math.max(0, DASHBOARD_WIDTH_UNITS - card.width));
+    card.y = clamp(card.y, 0, Math.max(0, DASHBOARD_HEIGHT_UNITS - card.height));
+    return card;
+  }
+
   function descendantIds(cardId) {
     const ids = new Set();
     const queue = [cardId];
@@ -87,29 +103,45 @@
   }
 
   function findEmptyCardPosition(width, height, parentId = null, preferredPosition = null, excludedIds = new Set()) {
+    const boundedWidth = parentId === null ? Math.min(width, DASHBOARD_WIDTH_UNITS) : width;
+    const boundedHeight = parentId === null ? Math.min(height, DASHBOARD_HEIGHT_UNITS) : height;
     const preferred =
       preferredPosition ?? {
-        x: Math.round((window.innerWidth / 2 - state.pan.x) / (GRID_SIZE * state.zoom) - width / 2),
-        y: Math.round((window.innerHeight / 2 - state.pan.y) / (GRID_SIZE * state.zoom) - height / 2),
+        x: Math.round((window.innerWidth / 2 - state.pan.x) / (GRID_SIZE * state.zoom) - boundedWidth / 2),
+        y: Math.round((window.innerHeight / 2 - state.pan.y) / (GRID_SIZE * state.zoom) - boundedHeight / 2),
       };
+    const boundedPreferred =
+      parentId === null
+        ? {
+            x: clamp(preferred.x, 0, Math.max(0, DASHBOARD_WIDTH_UNITS - boundedWidth)),
+            y: clamp(preferred.y, 0, Math.max(0, DASHBOARD_HEIGHT_UNITS - boundedHeight)),
+          }
+        : preferred;
 
     for (let radius = 0; radius <= PLACEMENT_SEARCH_RADIUS_UNITS; radius += 1) {
-      for (let y = preferred.y - radius; y <= preferred.y + radius; y += 1) {
-        for (let x = preferred.x - radius; x <= preferred.x + radius; x += 1) {
+      for (let y = boundedPreferred.y - radius; y <= boundedPreferred.y + radius; y += 1) {
+        for (let x = boundedPreferred.x - radius; x <= boundedPreferred.x + radius; x += 1) {
           const isEdge =
-            x === preferred.x - radius ||
-            x === preferred.x + radius ||
-            y === preferred.y - radius ||
-            y === preferred.y + radius;
+            x === boundedPreferred.x - radius ||
+            x === boundedPreferred.x + radius ||
+            y === boundedPreferred.y - radius ||
+            y === boundedPreferred.y + radius;
           if (!isEdge) continue;
 
-          const candidate = { x, y, width, height };
+          if (
+            parentId === null &&
+            (x < 0 || y < 0 || x + boundedWidth > DASHBOARD_WIDTH_UNITS || y + boundedHeight > DASHBOARD_HEIGHT_UNITS)
+          ) {
+            continue;
+          }
+
+          const candidate = { x, y, width: boundedWidth, height: boundedHeight };
           if (!hasCardOverlap(candidate, parentId, excludedIds)) return { x, y };
         }
       }
     }
 
-    return preferred;
+    return boundedPreferred;
   }
 
   function removeCardTree(cardId) {
@@ -132,6 +164,7 @@
   }
 
   app.cardModel = {
+    clampDashboardCard,
     defaultDraft,
     descendantIds,
     findEmptyCardPosition,

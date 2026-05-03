@@ -52,8 +52,6 @@ textarea {
   position: absolute;
   left: 0;
   top: 0;
-  width: 1px;
-  height: 1px;
   transform-origin: 0 0;
   background-image:
     linear-gradient(rgba(28, 39, 57, 0.14) 1px, transparent 1px),
@@ -68,23 +66,21 @@ textarea {
   background-position: 0 0;
 }
 
-.grid-layer::before {
-  content: "";
-  position: absolute;
-  left: -50000px;
-  top: -50000px;
-  width: 100000px;
-  height: 100000px;
-  background: inherit;
-  background-position: inherit;
-}
-
 .card-layer {
   position: absolute;
   left: -50000px;
   top: -50000px;
   width: 100000px;
   height: 100000px;
+}
+
+.dashboard-bounds {
+  position: absolute;
+  z-index: 0;
+  border: 2px solid rgba(22, 114, 91, 0.34);
+  background: rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.72);
+  pointer-events: none;
 }
 
 .card {

@@ -37,8 +37,9 @@
   } = app.dom;
   const { state } = app;
   const { saveStoredState, importStateData } = app.storage;
-  const { render, renderConfigModal, applyPan } = app.rendering;
+  const { render, renderConfigModal, applyPan, clampPan } = app.rendering;
   const {
+    clampDashboardCard,
     defaultDraft,
     descendantIds,
     findEmptyCardPosition,
@@ -117,6 +118,7 @@
     state.zoom = zoom;
     state.pan.x = anchorClientX - anchorBoardX * zoom;
     state.pan.y = anchorClientY - anchorBoardY * zoom;
+    clampPan();
     saveStoredState();
     render();
     showZoomToast();
@@ -191,6 +193,7 @@
         x: position.x,
         y: position.y,
       };
+      clampDashboardCard(card);
       state.cards.push(card);
       state.selectedId = card.id;
       saveStoredState();
@@ -200,6 +203,7 @@
       const card = selectedCard();
       if (!card) return;
       Object.assign(card, draft);
+      clampDashboardCard(card);
       saveStoredState();
     }
 
@@ -309,6 +313,7 @@
     card.parentId = null;
     card.x = position.x;
     card.y = position.y;
+    clampDashboardCard(card);
   }
 
   function isPointerInsideBoard(boardId, event) {
@@ -470,6 +475,8 @@
       if (card.parentId) {
         card.x = Math.max(0, card.x);
         card.y = Math.max(0, card.y);
+      } else {
+        clampDashboardCard(card);
       }
 
       updateDropTarget(event, card);
@@ -478,6 +485,7 @@
     if (interaction.type === "resize") {
       card.width = Math.max(MIN_CARD_WIDTH_UNITS, interaction.startWidth + deltaX);
       card.height = Math.max(MIN_CARD_HEIGHT_UNITS, interaction.startHeight + deltaY);
+      clampDashboardCard(card);
     }
 
     render();
@@ -618,7 +626,8 @@
     const importedCards = sourceCards.map((card) => {
       const parentId = card.id === data.rootId || !sourceIds.has(card.parentId) ? null : idMap.get(card.parentId);
       const position = card.id === data.rootId ? rootPosition : null;
-      return normalizeImportedCard(card, idMap.get(card.id), parentId, position);
+      const importedCard = normalizeImportedCard(card, idMap.get(card.id), parentId, position);
+      return clampDashboardCard(importedCard);
     });
 
     state.cards.push(...importedCards);

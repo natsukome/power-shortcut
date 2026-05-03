@@ -1,5 +1,5 @@
 (function initRender(app) {
-  const { CARD_LAYER_OFFSET, GRID_SIZE } = app.constants;
+  const { CARD_LAYER_OFFSET, DASHBOARD_HEIGHT_UNITS, DASHBOARD_WIDTH_UNITS, GRID_SIZE } = app.constants;
   const {
     cardConfigModal,
     cardContextMenu,
@@ -26,7 +26,19 @@
   } = app.dom;
   const { state } = app;
 
+  function clampPan() {
+    const dashboardWidth = DASHBOARD_WIDTH_UNITS * GRID_SIZE * state.zoom;
+    const dashboardHeight = DASHBOARD_HEIGHT_UNITS * GRID_SIZE * state.zoom;
+    const minX = window.innerWidth - dashboardWidth;
+    const minY = window.innerHeight - dashboardHeight;
+
+    state.pan.x = dashboardWidth <= window.innerWidth ? (window.innerWidth - dashboardWidth) / 2 : Math.min(0, Math.max(minX, state.pan.x));
+    state.pan.y =
+      dashboardHeight <= window.innerHeight ? (window.innerHeight - dashboardHeight) / 2 : Math.min(0, Math.max(minY, state.pan.y));
+  }
+
   function applyPan() {
+    clampPan();
     gridLayer.style.transform = `translate(${state.pan.x}px, ${state.pan.y}px) scale(${state.zoom})`;
   }
 
@@ -41,8 +53,20 @@
   }
 
   function renderCards() {
+    gridLayer.style.width = `${DASHBOARD_WIDTH_UNITS * GRID_SIZE}px`;
+    gridLayer.style.height = `${DASHBOARD_HEIGHT_UNITS * GRID_SIZE}px`;
     const dashboardCards = state.cards.filter((card) => card.parentId === null);
-    cardLayer.replaceChildren(...dashboardCards.map((card) => createCardElement(card, true)));
+    cardLayer.replaceChildren(createDashboardBounds(), ...dashboardCards.map((card) => createCardElement(card, true)));
+  }
+
+  function createDashboardBounds() {
+    const bounds = document.createElement("div");
+    bounds.className = "dashboard-bounds";
+    bounds.style.left = `${CARD_LAYER_OFFSET}px`;
+    bounds.style.top = `${CARD_LAYER_OFFSET}px`;
+    bounds.style.width = `${DASHBOARD_WIDTH_UNITS * GRID_SIZE}px`;
+    bounds.style.height = `${DASHBOARD_HEIGHT_UNITS * GRID_SIZE}px`;
+    return bounds;
   }
 
   function createIcon(pathData) {
@@ -304,6 +328,7 @@
 
   app.rendering = {
     applyPan,
+    clampPan,
     render,
     renderConfigModal,
   };
