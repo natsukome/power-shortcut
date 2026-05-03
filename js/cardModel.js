@@ -170,9 +170,7 @@
     removedIds.add(cardId);
     state.cards = state.cards.filter((card) => !removedIds.has(card.id));
 
-    if (removedIds.has(state.selectedId)) {
-      state.selectedId = state.cards[Math.max(0, selectedIndex - 1)]?.id ?? null;
-    }
+    if (removedIds.has(state.selectedId)) state.selectedId = null;
 
     return { removed: true, removedIds };
   }
