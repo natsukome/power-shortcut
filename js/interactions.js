@@ -1,5 +1,6 @@
 (function initInteractions(app) {
   const {
+    CARD_LAYER_OFFSET,
     DEFAULT_CARD_HEIGHT_UNITS,
     DEFAULT_CARD_WIDTH_UNITS,
     GRID_SIZE,
@@ -63,6 +64,24 @@
     const url = normalizeUrl(card.url ?? "");
     if (!url) return;
     window.open(url, "_blank", "noopener,noreferrer");
+  }
+
+  function cardElementFor(cardId) {
+    return [...cardLayer.querySelectorAll(".card")].find((element) => element.dataset.cardId === cardId) ?? null;
+  }
+
+  function updateCardElementFrame(card) {
+    const element = cardElementFor(card.id);
+    if (!element) {
+      render();
+      return;
+    }
+
+    const offset = card.parentId === null ? CARD_LAYER_OFFSET : 0;
+    element.style.left = `${offset + card.x * GRID_SIZE}px`;
+    element.style.top = `${offset + card.y * GRID_SIZE}px`;
+    element.style.width = `${card.width * GRID_SIZE}px`;
+    element.style.height = `${card.height * GRID_SIZE}px`;
   }
 
   async function copyText(text) {
@@ -334,23 +353,26 @@
   }
 
   function updateDropTarget(event, card) {
+    const previousDropTargetBoardId = state.dropTargetBoardId;
+    const previousExitHintBoardId = state.exitHintBoardId;
+
     if (!card || state.activeInteraction?.type !== "move") {
       state.dropTargetBoardId = null;
       state.exitHintBoardId = null;
-      return;
+      return previousDropTargetBoardId !== state.dropTargetBoardId || previousExitHintBoardId !== state.exitHintBoardId;
     }
 
     if (card.parentId && isPointerInsideBoard(card.parentId, event)) {
       state.dropTargetBoardId = null;
       state.exitHintBoardId = card.parentId;
-      return;
+      return previousDropTargetBoardId !== state.dropTargetBoardId || previousExitHintBoardId !== state.exitHintBoardId;
     }
 
     const board = boardAtPoint(event, card.id);
     const nextBoardId = board?.id === card.parentId ? null : (board?.id ?? null);
-    if (state.dropTargetBoardId === nextBoardId && state.exitHintBoardId === null) return;
     state.dropTargetBoardId = nextBoardId;
     state.exitHintBoardId = null;
+    return previousDropTargetBoardId !== state.dropTargetBoardId || previousExitHintBoardId !== state.exitHintBoardId;
   }
 
   function startDashboardPan(event) {
@@ -488,7 +510,11 @@
         clampDashboardCard(card);
       }
 
-      updateDropTarget(event, card);
+      const dropTargetChanged = updateDropTarget(event, card);
+      if (dropTargetChanged) {
+        render();
+        return;
+      }
     }
 
     if (interaction.type === "resize") {
@@ -497,7 +523,7 @@
       clampDashboardCard(card);
     }
 
-    render();
+    updateCardElementFrame(card);
   }
 
   function endInteraction(event) {
