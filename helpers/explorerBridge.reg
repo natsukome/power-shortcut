@@ -1,0 +1,8 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\explorerBridge]
+@="URL:Open Folder Protocol"
+"URL Protocol"=""
+
+[HKEY_CLASSES_ROOT\explorerBridge\shell\open\command]
+@="powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File \"C:\\tools\\explorerBridge.ps1\" \"%1\""

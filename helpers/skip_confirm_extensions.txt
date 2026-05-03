@@ -1,0 +1,10 @@
+# Skip confirmation extensions.
+.txt
+.md
+.conf
+.log
+.json
+.xml
+.csv
+.exel
+.word
