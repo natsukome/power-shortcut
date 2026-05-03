@@ -506,6 +506,8 @@ textarea {
 }
 
 .card-context-menu__item {
+  display: flex;
+  align-items: center;
   width: 100%;
   min-height: 28px;
   padding: 0 9px;
@@ -517,6 +519,13 @@ textarea {
   font-size: 12px;
   font-weight: 700;
   text-align: left;
+  gap: 8px;
+}
+
+.card-context-menu__item .card__action-icon {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
 }
 
 .card-context-menu__item:hover {

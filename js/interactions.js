@@ -15,6 +15,7 @@
     addCardButton,
     cancelConfigButton,
     cancelImportButton,
+    cardConfigModal,
     cardContextMenu,
     cardLayer,
     cardList,
@@ -234,6 +235,11 @@
   }
 
   function removeCard(cardId) {
+    const card = state.cards.find((item) => item.id === cardId);
+    if (card?.type === "board" && !window.confirm(`Remove board "${card.title || "Untitled"}" and all child cards?`)) {
+      return;
+    }
+
     const result = removeCardTree(cardId);
     if (!result.removed) return;
 
@@ -788,6 +794,14 @@
     }
   }
 
+  function handleConfigKeyDown(event) {
+    if (event.key !== "Enter" || event.isComposing || !state.configMode) return;
+    if (event.target.closest("textarea")) return;
+
+    event.preventDefault();
+    saveConfig();
+  }
+
   function attachEventHandlers() {
     dashboard.addEventListener("pointerdown", startDashboardPan);
     dashboard.addEventListener("wheel", handleDashboardWheel, { passive: false });
@@ -802,6 +816,7 @@
     closeConfigButton.addEventListener("click", closeConfig);
     cancelConfigButton.addEventListener("click", closeConfig);
     saveConfigButton.addEventListener("click", saveConfig);
+    cardConfigModal.addEventListener("keydown", handleConfigKeyDown);
     zoomInButton.addEventListener("click", () => setZoom(state.zoom + ZOOM_STEP));
     zoomOutButton.addEventListener("click", () => setZoom(state.zoom - ZOOM_STEP));
     exportButton.addEventListener("click", exportDashboard);

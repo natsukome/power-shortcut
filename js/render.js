@@ -29,6 +29,17 @@
     widthInput,
   } = app.dom;
   const { state } = app;
+  const ICON_PATHS = {
+    edit:
+      "M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z",
+    export:
+      "M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 18H8V7h11v16z",
+    lock:
+      "M12 17a2 2 0 0 0 2-2c0-.74-.4-1.38-1-1.72V11h-2v2.28A2 2 0 0 0 12 17zm6-8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v3H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V11c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v3H9V6z",
+    remove: "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM8 9h8v10H8V9zm7.5-5-1-1h-5l-1 1H5v2h14V4z",
+    unlock:
+      "M12 17a2 2 0 0 0 2-2c0-.74-.4-1.38-1-1.72V11h-2v2.28A2 2 0 0 0 12 17zm6-8H9V6c0-1.66 1.34-3 3-3s3 1.34 3 3h2c0-2.76-2.24-5-5-5S7 3.24 7 6v3H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V11c0-1.1-.9-2-2-2z",
+  };
 
   function clampPan() {
     const dashboardWidth = DASHBOARD_WIDTH_UNITS * GRID_SIZE * state.zoom;
@@ -85,8 +96,9 @@
     return svg;
   }
 
-  function cardTypeLabel(type) {
-    return type === "local-link" ? "Link (Local)" : type;
+  function cardTypeLabel(card) {
+    if (card.type !== "local-link") return card.type;
+    return `Link (${card.localLinkMode === "text" ? "Text" : "App"})`;
   }
 
   function localLinkHref(card) {
@@ -149,7 +161,7 @@
 
     const type = document.createElement("div");
     type.className = "card__type";
-    type.textContent = cardTypeLabel(card.type);
+    type.textContent = cardTypeLabel(card);
 
     const actions = document.createElement("div");
     actions.className = "card__actions";
@@ -160,13 +172,7 @@
     mutabilityButton.dataset.action = "toggle-mutability";
     mutabilityButton.title = card.isMutable ? "Make immutable" : "Make mutable";
     mutabilityButton.setAttribute("aria-label", card.isMutable ? "Make immutable" : "Make mutable");
-    mutabilityButton.append(
-      createIcon(
-        card.isMutable
-          ? "M12 17a2 2 0 0 0 2-2c0-.74-.4-1.38-1-1.72V11h-2v2.28A2 2 0 0 0 12 17zm6-8H9V6c0-1.66 1.34-3 3-3s3 1.34 3 3h2c0-2.76-2.24-5-5-5S7 3.24 7 6v3H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V11c0-1.1-.9-2-2-2z"
-          : "M12 17a2 2 0 0 0 2-2c0-.74-.4-1.38-1-1.72V11h-2v2.28A2 2 0 0 0 12 17zm6-8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v3H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V11c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v3H9V6z",
-      ),
-    );
+    mutabilityButton.append(createIcon(card.isMutable ? ICON_PATHS.unlock : ICON_PATHS.lock));
 
     const editButton = document.createElement("button");
     editButton.className = "card__action card__action--edit";
@@ -174,11 +180,7 @@
     editButton.dataset.action = "edit";
     editButton.title = "Edit";
     editButton.setAttribute("aria-label", "Edit");
-    editButton.append(
-      createIcon(
-        "M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z",
-      ),
-    );
+    editButton.append(createIcon(ICON_PATHS.edit));
 
     const removeButton = document.createElement("button");
     removeButton.className = "card__action card__action--danger";
@@ -186,11 +188,7 @@
     removeButton.dataset.action = "remove";
     removeButton.title = "Remove";
     removeButton.setAttribute("aria-label", "Remove");
-    removeButton.append(
-      createIcon(
-        "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM8 9h8v10H8V9zm7.5-5-1-1h-5l-1 1H5v2h14V4z",
-      ),
-    );
+    removeButton.append(createIcon(ICON_PATHS.remove));
 
     const body = card.type === "link" || card.type === "local-link" || card.type === "secret" ? null : document.createElement("div");
 
@@ -287,7 +285,7 @@
 
     const meta = document.createElement("span");
     meta.className = "card-list__meta";
-    meta.textContent = `${cardTypeLabel(card.type)} | ${card.width * GRID_SIZE}x${card.height * GRID_SIZE}px`;
+    meta.textContent = `${cardTypeLabel(card)} | ${card.width * GRID_SIZE}x${card.height * GRID_SIZE}px`;
 
     header.append(meta);
     item.append(header);
@@ -328,13 +326,16 @@
     }
   }
 
-  function createContextMenuButton(action, label, disabled = false) {
+  function createContextMenuButton(action, label, iconPath, disabled = false) {
     const button = document.createElement("button");
+    const text = document.createElement("span");
+
     button.type = "button";
     button.className = "card-context-menu__item";
     button.dataset.action = action;
-    button.textContent = label;
     button.disabled = disabled;
+    text.textContent = label;
+    button.append(createIcon(iconPath), text);
     return button;
   }
 
@@ -349,10 +350,10 @@
     cardContextMenu.style.left = `${menuState.x}px`;
     cardContextMenu.style.top = `${menuState.y}px`;
     cardContextMenu.append(
-      createContextMenuButton("edit", "Edit", !card.isMutable),
-      createContextMenuButton("remove", "Remove", !card.isMutable),
-      createContextMenuButton("toggle-mutability", card.isMutable ? "Lock" : "Unlock"),
-      createContextMenuButton("export-partial", "Export"),
+      createContextMenuButton("edit", "Edit", ICON_PATHS.edit, !card.isMutable),
+      createContextMenuButton("remove", "Remove", ICON_PATHS.remove, !card.isMutable),
+      createContextMenuButton("toggle-mutability", card.isMutable ? "Lock" : "Unlock", card.isMutable ? ICON_PATHS.lock : ICON_PATHS.unlock),
+      createContextMenuButton("export-partial", "Export", ICON_PATHS.export),
     );
   }
 
