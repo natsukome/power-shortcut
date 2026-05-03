@@ -486,6 +486,7 @@
       startY: card.y,
       startWidth: card.width,
       startHeight: card.height,
+      resizeAxis: actionTarget?.dataset.resizeAxis ?? "both",
     };
     render();
   }
@@ -528,7 +529,9 @@
 
     if (interaction.type === "resize") {
       card.width = Math.max(MIN_CARD_WIDTH_UNITS, interaction.startWidth + deltaX);
-      card.height = Math.max(MIN_CARD_HEIGHT_UNITS, interaction.startHeight + deltaY);
+      if (interaction.resizeAxis !== "x") {
+        card.height = Math.max(MIN_CARD_HEIGHT_UNITS, interaction.startHeight + deltaY);
+      }
       clampDashboardCard(card);
     }
 

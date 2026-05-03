@@ -433,6 +433,7 @@ textarea {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.12s ease;
+  padding-right:5px;
 }
 
 .card:hover .card__actions,
@@ -647,6 +648,28 @@ textarea {
   height: 8px;
   border-right: 2px solid #8a96aa;
   border-bottom: 2px solid #8a96aa;
+}
+
+.card__resize--width {
+  left: auto;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  height: auto;
+  cursor: ew-resize;
+}
+
+.card__resize--width::after {
+  left: auto;
+  top: 50%;
+  right: 3px;
+  bottom: auto;
+  width: 2px;
+  height: 14px;
+  border-right: 2px solid #8a96aa;
+  border-bottom: 0;
+  transform: translateY(-50%);
 }
 
 .util-modal,

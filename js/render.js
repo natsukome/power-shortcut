@@ -131,7 +131,8 @@
       state.activeInteraction?.cardId === card.id &&
       (state.activeInteraction.type === "move" || state.activeInteraction.type === "resize");
     const isBoardCollapsed = card.type === "board" && state.collapsedBoardCardIds.has(card.id);
-    const canResize = card.isMutable && card.type !== "link" && card.type !== "local-link" && card.type !== "secret";
+    const isWidthOnlyResize = card.type === "link" || card.type === "local-link" || card.type === "secret";
+    const canResize = card.isMutable;
 
     element.className = `card card--${card.type} card--theme-${card.colorTheme ?? "slate"}${card.isMutable ? "" : " card--immutable"}${
       isBoardCollapsed ? " is-collapsed" : ""
@@ -249,8 +250,9 @@
     }
 
     const resizeHandle = document.createElement("div");
-    resizeHandle.className = "card__resize";
+    resizeHandle.className = `card__resize${isWidthOnlyResize ? " card__resize--width" : ""}`;
     resizeHandle.dataset.action = "resize";
+    if (isWidthOnlyResize) resizeHandle.dataset.resizeAxis = "x";
     resizeHandle.setAttribute("aria-hidden", "true");
 
     heading.append(type, title);
