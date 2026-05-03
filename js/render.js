@@ -39,6 +39,14 @@
     lock:
       "M12 17a2 2 0 0 0 2-2c0-.74-.4-1.38-1-1.72V11h-2v2.28A2 2 0 0 0 12 17zm6-8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v3H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V11c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v3H9V6z",
     remove: "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM8 9h8v10H8V9zm7.5-5-1-1h-5l-1 1H5v2h14V4z",
+    typeBoard: "M3 5c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2v14c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V5zm2 0v14h14V5H5zm2 2h10v3H7V7zm0 5h4v5H7v-5zm6 0h4v5h-4v-5z",
+    typeLink:
+      "M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4v2H7c-.61 0-1.1.49-1.1 1.1S6.39 13.1 7 13.1h4v2H7c-1.71 0-3.1-1.39-3.1-3.1zm5.1 1h6v-2H9v2zm4-4.1h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4v-2h4c.61 0 1.1-.49 1.1-1.1s-.49-1.1-1.1-1.1h-4v-2z",
+    typeLocalLink:
+      "M4 4h11c1.1 0 2 .9 2 2v3h-2V6H4v12h11v-3h2v3c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zm13.59 5.59L20 12l-2.41 2.41-1.42-1.42.59-.59H9v-2h7.76l-.59-.59 1.42-1.42z",
+    typeSecret:
+      "M12 2a5 5 0 0 0-5 5v3H6c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2h-1V7a5 5 0 0 0-5-5zm-3 8V7a3 3 0 0 1 6 0v3H9zm3 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z",
+    typeText: "M4 5h16v2H4V5zm0 4h16v2H4V9zm0 4h10v2H4v-2zm0 4h16v2H4v-2z",
     unlock:
       "M12 17a2 2 0 0 0 2-2c0-.74-.4-1.38-1-1.72V11h-2v2.28A2 2 0 0 0 12 17zm6-8H9V6c0-1.66 1.34-3 3-3s3 1.34 3 3h2c0-2.76-2.24-5-5-5S7 3.24 7 6v3H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V11c0-1.1-.9-2-2-2z",
   };
@@ -86,11 +94,11 @@
     return bounds;
   }
 
-  function createIcon(pathData) {
+  function createIcon(pathData, className = "card__action-icon") {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
 
-    svg.setAttribute("class", "card__action-icon");
+    svg.setAttribute("class", className);
     svg.setAttribute("viewBox", "0 0 24 24");
     svg.setAttribute("aria-hidden", "true");
     path.setAttribute("d", pathData);
@@ -101,6 +109,14 @@
   function cardTypeLabel(card) {
     if (card.type !== "local-link") return card.type;
     return `Link (${card.localLinkMode === "text" ? "Text" : "App"})`;
+  }
+
+  function cardTypeIconPath(type) {
+    if (type === "board") return ICON_PATHS.typeBoard;
+    if (type === "link") return ICON_PATHS.typeLink;
+    if (type === "local-link") return ICON_PATHS.typeLocalLink;
+    if (type === "secret") return ICON_PATHS.typeSecret;
+    return ICON_PATHS.typeText;
   }
 
   function localLinkHref(card) {
@@ -144,6 +160,17 @@
     const heading = document.createElement("div");
     heading.className = "card__heading";
 
+    const type = document.createElement("div");
+    type.className = "card__type";
+    type.title = cardTypeLabel(card);
+    type.append(createIcon(cardTypeIconPath(card.type), "card__type-icon"));
+    if (card.type === "local-link") {
+      const mode = document.createElement("span");
+      mode.className = "card__type-mode";
+      mode.textContent = card.localLinkMode === "text" ? "text" : "app";
+      type.append(mode);
+    }
+
     const title = document.createElement("div");
     title.className = "card__title";
     if (card.type === "local-link") {
@@ -161,10 +188,6 @@
       title.dataset.action = "toggle-board-collapse";
       title.title = isBoardCollapsed ? "Expand board" : "Collapse board";
     }
-
-    const type = document.createElement("div");
-    type.className = "card__type";
-    type.textContent = cardTypeLabel(card);
 
     const actions = document.createElement("div");
     actions.className = "card__actions";
@@ -230,7 +253,7 @@
     resizeHandle.dataset.action = "resize";
     resizeHandle.setAttribute("aria-hidden", "true");
 
-    heading.append(title, type);
+    heading.append(type, title);
     actions.append(mutabilityButton);
     if (card.isMutable) actions.append(editButton, removeButton);
     header.append(heading, actions);

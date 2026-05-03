@@ -399,14 +399,31 @@ textarea {
 }
 
 .card__type {
+  display: inline-flex;
   flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  min-height: 18px;
   padding: 1px 4px;
   border-radius: 4px;
   background: var(--card-type-bg);
   color: var(--card-type-text);
   font-size: 10px;
   font-weight: 800;
-  text-transform: uppercase;
+  gap: 3px;
+}
+
+.card__type-icon {
+  width: 13px;
+  height: 13px;
+  fill: currentColor;
+  pointer-events: none;
+}
+
+.card__type-mode {
+  line-height: 1;
+  text-transform: lowercase;
 }
 
 .card__actions {
