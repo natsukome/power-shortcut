@@ -365,6 +365,10 @@ textarea {
   font-weight: 700;
 }
 
+.editor label[hidden] {
+  display: none;
+}
+
 .editor input,
 .editor select,
 .editor textarea {
