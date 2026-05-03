@@ -802,10 +802,28 @@
     saveConfig();
   }
 
+  function syncEditableTextCard(event) {
+    const body = event.target.closest(".card__body");
+    const cardElement = body?.closest(".card");
+    if (!body || !cardElement) return;
+
+    const card = state.cards.find((item) => item.id === cardElement.dataset.cardId);
+    if (!card || card.type !== "text" || !card.isMutable) return;
+
+    card.content = body.textContent;
+    if (state.configMode === "edit" && state.selectedId === card.id && state.draft) {
+      state.draft.content = card.content;
+      contentInput.value = card.content;
+    }
+    saveStoredState();
+  }
+
   function attachEventHandlers() {
     dashboard.addEventListener("pointerdown", startDashboardPan);
     dashboard.addEventListener("wheel", handleDashboardWheel, { passive: false });
     cardLayer.addEventListener("pointerdown", startCardInteraction);
+    cardLayer.addEventListener("input", syncEditableTextCard);
+    cardLayer.addEventListener("blur", syncEditableTextCard, true);
     cardLayer.addEventListener("contextmenu", showCardHeaderContextMenu);
     cardContextMenu.addEventListener("click", handleContextMenuClick);
     window.addEventListener("pointermove", moveInteraction);

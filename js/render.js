@@ -215,6 +215,10 @@
       }
     } else if (card.type === "text") {
       body.className = "card__body";
+      if (card.isMutable) {
+        body.contentEditable = "true";
+        body.spellcheck = true;
+      }
       body.textContent = card.content;
     }
 

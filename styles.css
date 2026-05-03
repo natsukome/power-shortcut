@@ -308,6 +308,15 @@ textarea {
   word-break: break-word;
 }
 
+.card__body[contenteditable="true"] {
+  cursor: text;
+  outline: none;
+}
+
+.card__body[contenteditable="true"]:focus {
+  box-shadow: inset 0 0 0 2px var(--card-selected-ring);
+}
+
 .card__body--board {
   position: relative;
   padding: 0;
