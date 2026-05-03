@@ -394,8 +394,6 @@
 
     if (event.target.closest(".card--local-link .card__title-link")) {
       state.activeInteraction = null;
-      saveStoredState();
-      render();
       return;
     }
 

@@ -135,6 +135,8 @@
       const anchor = document.createElement("a");
       anchor.className = "card__title-link";
       anchor.href = localLinkHref(card);
+      anchor.target = "_blank";
+      anchor.rel = "noopener noreferrer";
       anchor.textContent = card.title || "Untitled";
       title.append(anchor);
     } else {
