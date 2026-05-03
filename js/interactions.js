@@ -213,6 +213,62 @@
     card.y = Math.max(0, position.y);
   }
 
+  function isDroppedPastParentBoardLeftEdge(card, event) {
+    if (!card.parentId) return false;
+
+    const boardLayer = boardLayerFor(card.parentId);
+    const rect = boardLayer?.getBoundingClientRect();
+    return Boolean(rect && event.clientX < rect.left);
+  }
+
+  function transferCardToDashboard(card, event) {
+    const dashboardPoint = pointerToBoardUnits(event);
+    const preferredPosition = {
+      x: dashboardPoint.x - Math.round(card.width / 2),
+      y: dashboardPoint.y - Math.round(card.height / 2),
+    };
+    const excludedIds = descendantIds(card.id);
+    excludedIds.add(card.id);
+    const position = findEmptyCardPosition(card.width, card.height, null, preferredPosition, excludedIds);
+
+    card.parentId = null;
+    card.x = position.x;
+    card.y = position.y;
+  }
+
+  function isPointerInsideBoard(boardId, event) {
+    const boardLayer = boardLayerFor(boardId);
+    const rect = boardLayer?.getBoundingClientRect();
+
+    return Boolean(
+      rect &&
+        event.clientX >= rect.left &&
+        event.clientX <= rect.right &&
+        event.clientY >= rect.top &&
+        event.clientY <= rect.bottom,
+    );
+  }
+
+  function updateDropTarget(event, card) {
+    if (!card || state.activeInteraction?.type !== "move") {
+      state.dropTargetBoardId = null;
+      state.exitHintBoardId = null;
+      return;
+    }
+
+    if (card.parentId && isPointerInsideBoard(card.parentId, event)) {
+      state.dropTargetBoardId = null;
+      state.exitHintBoardId = card.parentId;
+      return;
+    }
+
+    const board = boardAtPoint(event, card.id);
+    const nextBoardId = board?.id === card.parentId ? null : (board?.id ?? null);
+    if (state.dropTargetBoardId === nextBoardId && state.exitHintBoardId === null) return;
+    state.dropTargetBoardId = nextBoardId;
+    state.exitHintBoardId = null;
+  }
+
   function startDashboardPan(event) {
     if (event.button !== 0 || event.target.closest(".card, .util-modal, .config-modal")) return;
     state.activeInteraction = {
@@ -238,8 +294,16 @@
     const actionTarget = event.target.closest("[data-action]");
     const action = actionTarget?.dataset.action;
 
-    if (card.type === "text" && event.target.closest(".card__body")) {
+    const bodyElement = event.target.closest(".card__body");
+    if (card.type === "text" && bodyElement?.closest(".card") === cardElement) {
       saveStoredState();
+      return;
+    }
+
+    if (action === "toggle-board-collapse") {
+      event.preventDefault();
+      event.stopPropagation();
+      toggleBoardCollapse(card.id);
       return;
     }
 
@@ -326,6 +390,8 @@
         card.x = Math.max(0, card.x);
         card.y = Math.max(0, card.y);
       }
+
+      updateDropTarget(event, card);
     }
 
     if (interaction.type === "resize") {
@@ -349,6 +415,8 @@
 
       if (card?.type === "link" && interaction.startedOnLinkTitle && movedDistance < 4 && clickedSameTitle) {
         state.activeInteraction = null;
+        state.dropTargetBoardId = null;
+        state.exitHintBoardId = null;
         saveStoredState();
         render();
         openLinkCard(card);
@@ -360,6 +428,8 @@
 
       if (card?.type === "secret" && interaction.startedOnSecretTitle && movedDistance < 4 && clickedSameSecretTitle) {
         state.activeInteraction = null;
+        state.dropTargetBoardId = null;
+        state.exitHintBoardId = null;
         saveStoredState();
         render();
         copySecretCard(card)
@@ -368,12 +438,18 @@
         return;
       }
 
-      const board = card ? boardAtPoint(event, card.id) : null;
-      if (card && board) transferCardToBoard(card, board, event);
+      if (card && isDroppedPastParentBoardLeftEdge(card, event)) {
+        transferCardToDashboard(card, event);
+      } else {
+        const board = card ? boardAtPoint(event, card.id) : null;
+        if (card && board) transferCardToBoard(card, board, event);
+      }
     }
 
     saveStoredState();
     state.activeInteraction = null;
+    state.dropTargetBoardId = null;
+    state.exitHintBoardId = null;
     render();
   }
 

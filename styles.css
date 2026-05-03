@@ -181,6 +181,19 @@ textarea {
   cursor: pointer;
 }
 
+.card--board .card__title {
+  cursor: pointer;
+}
+
+.card--board.is-collapsed {
+  min-height: 0;
+  height: auto !important;
+}
+
+.card--board.is-collapsed .card__header {
+  border-bottom: 0;
+}
+
 .card__header {
   display: flex;
   align-items: center;
@@ -318,6 +331,107 @@ textarea {
   position: relative;
   width: 100%;
   height: 100%;
+}
+
+.board-drop-hint {
+  position: absolute;
+  inset: 8px;
+  z-index: 900;
+  display: grid;
+  place-items: center;
+  border: 2px dashed rgba(22, 114, 91, 0.75);
+  border-radius: 8px;
+  background: rgba(204, 251, 241, 0.42);
+  color: #0f766e;
+  font-size: 14px;
+  font-weight: 800;
+  pointer-events: none;
+  text-transform: uppercase;
+  animation: board-drop-pulse 1s ease-in-out infinite;
+}
+
+.board-exit-hint {
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  z-index: 900;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  border-radius: 0 8px 8px 0;
+  background: linear-gradient(90deg, rgba(22, 114, 91, 0.24), rgba(22, 114, 91, 0.08));
+  color: #0f766e;
+  font-size: 10px;
+  font-weight: 800;
+  pointer-events: none;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.board-exit-hint::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-left: 3px solid #0f766e;
+  border-bottom: 3px solid #0f766e;
+  transform: translateY(-50%) rotate(45deg);
+  animation: board-exit-arrow 0.85s ease-in-out infinite;
+}
+
+.board-exit-hint::after {
+  content: "";
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  width: 18px;
+  height: 3px;
+  border-radius: 3px;
+  background: #0f766e;
+  transform: translateY(-50%);
+  animation: board-exit-line 0.85s ease-in-out infinite;
+}
+
+@keyframes board-drop-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(22, 114, 91, 0.16);
+    transform: scale(1);
+  }
+
+  50% {
+    box-shadow: 0 0 0 8px rgba(22, 114, 91, 0.08);
+    transform: scale(0.995);
+  }
+}
+
+@keyframes board-exit-arrow {
+  0%,
+  100% {
+    opacity: 0.6;
+    transform: translate(5px, -50%) rotate(45deg);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translate(0, -50%) rotate(45deg);
+  }
+}
+
+@keyframes board-exit-line {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: translate(5px, -50%);
+  }
+
+  50% {
+    opacity: 0.95;
+    transform: translate(0, -50%);
+  }
 }
 
 .board-layer .card {

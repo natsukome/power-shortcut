@@ -16,6 +16,8 @@
     configMode: null,
     draft: null,
     activeInteraction: null,
+    dropTargetBoardId: null,
+    exitHintBoardId: null,
     pan: {
       x: window.innerWidth / 2,
       y: window.innerHeight / 2,

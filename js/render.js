@@ -45,8 +45,11 @@
     const isActiveCard =
       state.activeInteraction?.cardId === card.id &&
       (state.activeInteraction.type === "move" || state.activeInteraction.type === "resize");
+    const isBoardCollapsed = card.type === "board" && state.collapsedBoardIds.has(card.id);
 
     element.className = `card card--${card.type}${card.isMutable ? "" : " card--immutable"}${
+      isBoardCollapsed ? " is-collapsed" : ""
+    }${
       card.id === state.selectedId ? " is-selected" : ""
     }${
       isActiveCard ? " is-dragging" : ""
@@ -72,6 +75,10 @@
     const title = document.createElement("div");
     title.className = "card__title";
     title.textContent = card.title || "Untitled";
+    if (card.type === "board") {
+      title.dataset.action = "toggle-board-collapse";
+      title.title = isBoardCollapsed ? "Expand board" : "Collapse board";
+    }
 
     const type = document.createElement("div");
     type.className = "card__type";
@@ -111,6 +118,18 @@
         ...state.cards.filter((child) => child.parentId === card.id).map((child) => createCardElement(child)),
       );
       body.append(boardLayer);
+      if (state.dropTargetBoardId === card.id) {
+        const dropHint = document.createElement("div");
+        dropHint.className = "board-drop-hint";
+        dropHint.textContent = "Drop to add";
+        body.append(dropHint);
+      }
+      if (state.exitHintBoardId === card.id) {
+        const exitHint = document.createElement("div");
+        exitHint.className = "board-exit-hint";
+        exitHint.textContent = "Move out";
+        body.append(exitHint);
+      }
     } else if (card.type === "text") {
       body.className = "card__body";
       body.textContent = card.content;
@@ -126,7 +145,7 @@
     if (card.isMutable) actions.append(editButton, removeButton);
     header.append(heading, actions);
     element.append(header);
-    if (body) element.append(body);
+    if (body && !isBoardCollapsed) element.append(body);
     if (card.isMutable) element.append(resizeHandle);
     return element;
   }
