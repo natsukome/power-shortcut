@@ -835,6 +835,10 @@
     saveConfig();
   }
 
+  function editablePlainText(element) {
+    return element.innerText.replace(/\r\n/g, "\n").replace(/\n$/, "");
+  }
+
   function syncEditableTextCard(event) {
     const body = event.target.closest(".card__body");
     const cardElement = body?.closest(".card");
@@ -843,7 +847,7 @@
     const card = state.cards.find((item) => item.id === cardElement.dataset.cardId);
     if (!card || card.type !== "text" || !card.isMutable) return;
 
-    card.content = body.textContent;
+    card.content = editablePlainText(body);
     if (state.configMode === "edit" && state.selectedId === card.id && state.draft) {
       state.draft.content = card.content;
       contentInput.value = card.content;
