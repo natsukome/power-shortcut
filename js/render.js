@@ -12,6 +12,7 @@
     contentField,
     contentInput,
     dashboardToast,
+    gridToggleButton,
     gridLayer,
     heightInput,
     importContentInput,
@@ -49,6 +50,9 @@
     typeText: "M4 5h16v2H4V5zm0 4h16v2H4V9zm0 4h10v2H4v-2zm0 4h16v2H4v-2z",
     unlock:
       "M12 17a2 2 0 0 0 2-2c0-.74-.4-1.38-1-1.72V11h-2v2.28A2 2 0 0 0 12 17zm6-8H9V6c0-1.66 1.34-3 3-3s3 1.34 3 3h2c0-2.76-2.24-5-5-5S7 3.24 7 6v3H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V11c0-1.1-.9-2-2-2z",
+    gridVisible: "M3 3h18v18H3V3zm2 2v4h4V5H5zm6 0v4h4V5h-4zm6 0v4h2V5h-2zM5 11v4h4v-4H5zm6 0v4h4v-4h-4zm6 0v4h2v-4h-2zM5 17v2h4v-2H5zm6 0v2h4v-2h-4zm6 0v2h2v-2h-2z",
+    gridHidden:
+      "M3.28 2 22 20.72 20.72 22l-3-3H3V4.28l-1-1L3.28 2zM5 6.28V9h2.72L5 6.28zM5 11v4h4v-4H5zm0 6v2h4v-2H5zm6 0v2h4.72l-2-2H11zm0-2h.72l-.72-.72V15zm8-10h-2v4h2V5zm-4 0h-4v2.72l2 2H15V5zm4 6h-2v2.72l2 2V11z",
   };
 
   function clampPan() {
@@ -69,12 +73,20 @@
 
   function render() {
     applyPan();
+    renderGridVisibility();
     renderCards();
     renderCardList();
     renderConfigModal();
     renderImportModal();
     renderCardContextMenu();
     renderToast();
+  }
+
+  function renderGridVisibility() {
+    gridLayer.classList.toggle("is-grid-hidden", !state.showGrid);
+    gridToggleButton.title = state.showGrid ? "Hide grid lines" : "Show grid lines";
+    gridToggleButton.setAttribute("aria-label", state.showGrid ? "Hide grid lines" : "Show grid lines");
+    gridToggleButton.replaceChildren(createIcon(state.showGrid ? ICON_PATHS.gridVisible : ICON_PATHS.gridHidden, "zoom-button__icon"));
   }
 
   function renderCards() {

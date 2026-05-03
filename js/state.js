@@ -26,6 +26,7 @@
     dropTargetBoardId: null,
     exitHintBoardId: null,
     zoom: 1,
+    showGrid: true,
     pan: {
       x: window.innerWidth / 2,
       y: window.innerHeight / 2,
@@ -80,6 +81,7 @@
     state.zoom = Number.isFinite(Number(storedState.zoom))
       ? Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Number(storedState.zoom)))
       : state.zoom;
+    state.showGrid = typeof storedState.showGrid === "boolean" ? storedState.showGrid : true;
     state.collapsedBoardIds = new Set(
       Array.isArray(storedState.collapsedBoardIds)
         ? storedState.collapsedBoardIds.filter((id) => restoredIds.has(id))
@@ -117,6 +119,7 @@
         collapsedBoardCardIds: [...state.collapsedBoardCardIds],
         pan: state.pan,
         zoom: state.zoom,
+        showGrid: state.showGrid,
       }),
     );
   }

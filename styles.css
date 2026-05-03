@@ -66,6 +66,10 @@ textarea {
   background-position: 0 0;
 }
 
+.grid-layer.is-grid-hidden {
+  background-image: none;
+}
+
 .card-layer {
   position: absolute;
   left: -50000px;
@@ -510,13 +514,17 @@ textarea {
   position: relative;
   padding: 0;
   overflow: hidden;
-  background-color: #f0fdfa;
+  background-color: color-mix(in srgb, var(--card-accent) 7%, #ffffff);
   background-image:
-    linear-gradient(rgba(15, 118, 110, 0.12) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(15, 118, 110, 0.12) 1px, transparent 1px);
+    linear-gradient(color-mix(in srgb, var(--card-accent) 20%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--card-accent) 20%, transparent) 1px, transparent 1px);
   background-size: var(--grid-size) var(--grid-size);
   cursor: default;
   user-select: none;
+}
+
+.grid-layer.is-grid-hidden .card__body--board {
+  background-image: none;
 }
 
 .board-layer {
@@ -789,6 +797,13 @@ textarea {
 
 .zoom-button:hover {
   background: #ffffff;
+}
+
+.zoom-button__icon {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  pointer-events: none;
 }
 
 .util-modal {

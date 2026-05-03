@@ -26,6 +26,7 @@
     confirmImportButton,
     dashboard,
     exportButton,
+    gridToggleButton,
     heightInput,
     importContentInput,
     importButton,
@@ -127,6 +128,12 @@
 
   function showZoomToast() {
     showToast(`Zoom ${Math.round(state.zoom * 100)}%`);
+  }
+
+  function toggleGridVisibility() {
+    state.showGrid = !state.showGrid;
+    saveStoredState();
+    render();
   }
 
   function setZoom(nextZoom, anchorClientX = window.innerWidth / 2, anchorClientY = window.innerHeight / 2) {
@@ -712,6 +719,7 @@
       collapsedBoardCardIds: [...state.collapsedBoardCardIds],
       pan: state.pan,
       zoom: state.zoom,
+      showGrid: state.showGrid,
     });
 
     try {
@@ -850,6 +858,7 @@
     cancelConfigButton.addEventListener("click", closeConfig);
     saveConfigButton.addEventListener("click", saveConfig);
     cardConfigModal.addEventListener("keydown", handleConfigKeyDown);
+    gridToggleButton.addEventListener("click", toggleGridVisibility);
     zoomInButton.addEventListener("click", () => setZoom(state.zoom + ZOOM_STEP));
     zoomOutButton.addEventListener("click", () => setZoom(state.zoom - ZOOM_STEP));
     exportButton.addEventListener("click", exportDashboard);

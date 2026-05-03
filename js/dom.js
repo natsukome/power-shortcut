@@ -10,6 +10,7 @@
   app.dom = {
     dashboard: document.querySelector("#dashboard"),
     dashboardToast: document.querySelector("#dashboardToast"),
+    gridToggleButton: document.querySelector("#gridToggleButton"),
     gridLayer: document.querySelector("#gridLayer"),
     cardLayer: document.querySelector("#cardLayer"),
     cardContextMenu: document.querySelector("#cardContextMenu"),
