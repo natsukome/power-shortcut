@@ -431,7 +431,7 @@ textarea {
 }
 
 .card__actions {
-  display: flex;
+  display: none;
   flex: 0 0 auto;
   gap: 3px;
   opacity: 0;
@@ -440,8 +440,9 @@ textarea {
   padding-right:5px;
 }
 
-.card:hover .card__actions,
-.card:focus-within .card__actions {
+.card__header:hover > .card__actions,
+.card:focus-within > .card__header > .card__actions {
+  display: flex;
   opacity: 1;
   pointer-events: auto;
 }
