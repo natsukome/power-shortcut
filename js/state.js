@@ -12,6 +12,7 @@
     cards: [],
     selectedId: null,
     collapsedBoardIds: new Set(),
+    collapsedBoardCardIds: new Set(),
     toastMessage: "",
     configMode: null,
     draft: null,
@@ -66,6 +67,11 @@
           ? storedState.collapsedBoardIds.filter((id) => restoredIds.has(id))
           : [],
       );
+      state.collapsedBoardCardIds = new Set(
+        Array.isArray(storedState.collapsedBoardCardIds)
+          ? storedState.collapsedBoardCardIds.filter((id) => restoredIds.has(id))
+          : [],
+      );
     } catch (error) {
       console.warn("Failed to restore UtilPage state.", error);
     }
@@ -78,6 +84,7 @@
         cards: state.cards,
         selectedId: state.selectedId,
         collapsedBoardIds: [...state.collapsedBoardIds],
+        collapsedBoardCardIds: [...state.collapsedBoardCardIds],
         pan: state.pan,
       }),
     );

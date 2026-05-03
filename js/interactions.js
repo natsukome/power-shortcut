@@ -303,7 +303,7 @@
     if (action === "toggle-board-collapse") {
       event.preventDefault();
       event.stopPropagation();
-      toggleBoardCollapse(card.id);
+      toggleBoardCardCollapse(card.id);
       return;
     }
 
@@ -458,6 +458,16 @@
       state.collapsedBoardIds.delete(cardId);
     } else {
       state.collapsedBoardIds.add(cardId);
+    }
+    saveStoredState();
+    render();
+  }
+
+  function toggleBoardCardCollapse(cardId) {
+    if (state.collapsedBoardCardIds.has(cardId)) {
+      state.collapsedBoardCardIds.delete(cardId);
+    } else {
+      state.collapsedBoardCardIds.add(cardId);
     }
     saveStoredState();
     render();

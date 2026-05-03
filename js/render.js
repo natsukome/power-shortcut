@@ -45,7 +45,7 @@
     const isActiveCard =
       state.activeInteraction?.cardId === card.id &&
       (state.activeInteraction.type === "move" || state.activeInteraction.type === "resize");
-    const isBoardCollapsed = card.type === "board" && state.collapsedBoardIds.has(card.id);
+    const isBoardCollapsed = card.type === "board" && state.collapsedBoardCardIds.has(card.id);
 
     element.className = `card card--${card.type}${card.isMutable ? "" : " card--immutable"}${
       isBoardCollapsed ? " is-collapsed" : ""
