@@ -393,6 +393,8 @@
 
   function startDashboardPan(event) {
     if (event.button !== 0 || event.target.closest(".card, .util-modal, .config-modal, .card-context-menu")) return;
+    state.selectedId = null;
+    hideContextMenu(false);
     state.activeInteraction = {
       type: "pan",
       pointerId: event.pointerId,
