@@ -9,6 +9,7 @@
     dashboard,
     heightInput,
     saveConfigButton,
+    secretInput,
     titleInput,
     typeInput,
     urlInput,
@@ -41,6 +42,37 @@
     window.open(url, "_blank", "noopener,noreferrer");
   }
 
+  async function copySecretCard(card) {
+    const secret = card.secret ?? "";
+    if (!secret) return;
+
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(secret);
+      return;
+    }
+
+    const textArea = document.createElement("textarea");
+    textArea.value = secret;
+    textArea.setAttribute("readonly", "");
+    textArea.style.position = "fixed";
+    textArea.style.left = "-9999px";
+    document.body.append(textArea);
+    textArea.select();
+    document.execCommand("copy");
+    textArea.remove();
+  }
+
+  function showToast(message) {
+    state.toastMessage = message;
+    render();
+
+    window.setTimeout(() => {
+      if (state.toastMessage !== message) return;
+      state.toastMessage = "";
+      render();
+    }, 1200);
+  }
+
   function openCreateConfig() {
     state.configMode = "create";
     state.draft = defaultDraft();
@@ -60,6 +92,7 @@
       title: card.title,
       content: card.content,
       url: card.url ?? "",
+      secret: card.secret ?? "",
       width: card.width,
       height: card.height,
     };
@@ -205,6 +238,11 @@
     const actionTarget = event.target.closest("[data-action]");
     const action = actionTarget?.dataset.action;
 
+    if (card.type === "text" && event.target.closest(".card__body")) {
+      saveStoredState();
+      return;
+    }
+
     if (action === "toggle-mutability") {
       event.preventDefault();
       event.stopPropagation();
@@ -253,6 +291,7 @@
       startBoardY: boardPoint.y,
       startClientX: event.clientX,
       startClientY: event.clientY,
+      startedOnSecretTitle: Boolean(event.target.closest(".card--secret .card__title")),
       startX: card.x,
       startY: card.y,
       startWidth: card.width,
@@ -316,6 +355,19 @@
         return;
       }
 
+      const clickedSameSecretTitle =
+        clickedElement?.closest(".card--secret .card__title")?.closest(".card")?.dataset.cardId === card?.id;
+
+      if (card?.type === "secret" && interaction.startedOnSecretTitle && movedDistance < 4 && clickedSameSecretTitle) {
+        state.activeInteraction = null;
+        saveStoredState();
+        render();
+        copySecretCard(card)
+          .then(() => showToast(`Copied: ${card.title || "Untitled"}`))
+          .catch((error) => console.warn("Failed to copy secret.", error));
+        return;
+      }
+
       const board = card ? boardAtPoint(event, card.id) : null;
       if (card && board) transferCardToBoard(card, board, event);
     }
@@ -354,6 +406,7 @@
     titleInput.addEventListener("input", syncDraftFromInputs);
     contentInput.addEventListener("input", syncDraftFromInputs);
     urlInput.addEventListener("input", syncDraftFromInputs);
+    secretInput.addEventListener("input", syncDraftFromInputs);
     widthInput.addEventListener("input", syncDraftFromInputs);
     heightInput.addEventListener("input", syncDraftFromInputs);
 

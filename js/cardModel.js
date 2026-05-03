@@ -9,7 +9,7 @@
     PLACEMENT_SEARCH_RADIUS_UNITS,
     VALID_CARD_TYPES,
   } = app.constants;
-  const { contentInput, heightInput, titleInput, typeInput, urlInput, widthInput } = app.dom;
+  const { contentInput, heightInput, secretInput, titleInput, typeInput, urlInput, widthInput } = app.dom;
   const { state } = app;
 
   function selectedCard() {
@@ -23,6 +23,7 @@
       title: `Card ${index}`,
       content: "",
       url: "",
+      secret: "",
       width: DEFAULT_CARD_WIDTH_UNITS,
       height: DEFAULT_CARD_HEIGHT_UNITS,
     };
@@ -35,6 +36,7 @@
       title: titleInput.value.trim() || "Untitled",
       content: type === "text" ? contentInput.value : "",
       url: type === "link" ? urlInput.value.trim() : "",
+      secret: type === "secret" ? secretInput.value : "",
       width: Math.max(MIN_CARD_WIDTH_UNITS, Number(widthInput.value) || DEFAULT_CARD_WIDTH_UNITS),
       height: Math.max(MIN_CARD_HEIGHT_UNITS, Number(heightInput.value) || DEFAULT_CARD_HEIGHT_UNITS),
     };

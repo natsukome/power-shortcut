@@ -88,6 +88,13 @@ textarea {
 }
 
 .card {
+  --card-accent: #64748b;
+  --card-header-bg: #f8fafc;
+  --card-surface: #ffffff;
+  --card-border-color: #cfd7e6;
+  --card-selected-ring: rgba(100, 116, 139, 0.24);
+  --card-type-bg: #e2e8f0;
+  --card-type-text: #475569;
   position: absolute;
   z-index: 1;
   display: flex;
@@ -95,17 +102,57 @@ textarea {
   min-width: 80px;
   min-height: 60px;
   overflow: hidden;
-  border: 1px solid var(--card-border);
+  border: 1px solid var(--card-border-color);
   border-radius: 8px;
-  background: var(--card-bg);
+  background: var(--card-surface);
   box-shadow: 0 10px 28px rgba(27, 42, 65, 0.13);
   user-select: none;
 }
 
+.card--text {
+  --card-accent: #2563eb;
+  --card-header-bg: #eff6ff;
+  --card-surface: #ffffff;
+  --card-border-color: #93c5fd;
+  --card-selected-ring: rgba(37, 99, 235, 0.22);
+  --card-type-bg: #dbeafe;
+  --card-type-text: #1d4ed8;
+}
+
+.card--board {
+  --card-accent: #16725b;
+  --card-header-bg: #ecfdf5;
+  --card-surface: #f8fffc;
+  --card-border-color: #5eead4;
+  --card-selected-ring: rgba(22, 114, 91, 0.24);
+  --card-type-bg: #ccfbf1;
+  --card-type-text: #0f766e;
+}
+
+.card--link {
+  --card-accent: #7c3aed;
+  --card-header-bg: #f5f3ff;
+  --card-surface: #ffffff;
+  --card-border-color: #c4b5fd;
+  --card-selected-ring: rgba(124, 58, 237, 0.22);
+  --card-type-bg: #ede9fe;
+  --card-type-text: #6d28d9;
+}
+
+.card--secret {
+  --card-accent: #c2410c;
+  --card-header-bg: #fff7ed;
+  --card-surface: #ffffff;
+  --card-border-color: #fdba74;
+  --card-selected-ring: rgba(194, 65, 12, 0.22);
+  --card-type-bg: #ffedd5;
+  --card-type-text: #c2410c;
+}
+
 .card.is-selected {
-  border-color: var(--accent);
+  border-color: var(--card-accent);
   box-shadow:
-    0 0 0 2px rgba(22, 114, 91, 0.22),
+    0 0 0 2px var(--card-selected-ring),
     0 12px 30px rgba(27, 42, 65, 0.16);
 }
 
@@ -117,17 +164,20 @@ textarea {
   box-shadow: 0 8px 20px rgba(27, 42, 65, 0.1);
 }
 
-.card--link {
+.card--link,
+.card--secret {
   min-height: 0;
   height: auto !important;
 }
 
-.card--link .card__header {
+.card--link .card__header,
+.card--secret .card__header {
   border-bottom: 0;
   cursor: move;
 }
 
-.card--link .card__title {
+.card--link .card__title,
+.card--secret .card__title {
   cursor: pointer;
 }
 
@@ -138,7 +188,8 @@ textarea {
   min-height: 28px;
   padding: 4px 6px 4px 8px;
   border-bottom: 1px solid #e4e9f1;
-  background: #f8fafc;
+  border-left: 4px solid var(--card-accent);
+  background: var(--card-header-bg);
   cursor: move;
   gap: 6px;
 }
@@ -160,8 +211,12 @@ textarea {
 
 .card__type {
   flex: 0 0 auto;
-  color: var(--muted);
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: var(--card-type-bg);
+  color: var(--card-type-text);
   font-size: 10px;
+  font-weight: 800;
   text-transform: uppercase;
 }
 
@@ -208,7 +263,7 @@ textarea {
   top: 9px;
   width: 8px;
   height: 6px;
-  border: 2px solid var(--accent);
+  border: 2px solid var(--card-accent);
   border-radius: 2px;
 }
 
@@ -219,7 +274,7 @@ textarea {
   top: 4px;
   width: 5px;
   height: 7px;
-  border: 2px solid var(--accent);
+  border: 2px solid var(--card-accent);
   border-bottom: 0;
   border-radius: 6px 6px 0 0;
 }
@@ -241,6 +296,7 @@ textarea {
   line-height: 1.45;
   overflow-wrap: anywhere;
   user-select: text;
+  -webkit-user-select: text;
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -249,10 +305,10 @@ textarea {
   position: relative;
   padding: 0;
   overflow: hidden;
-  background-color: #f7fafc;
+  background-color: #f0fdfa;
   background-image:
-    linear-gradient(rgba(28, 39, 57, 0.1) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(28, 39, 57, 0.1) 1px, transparent 1px);
+    linear-gradient(rgba(15, 118, 110, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 118, 110, 0.12) 1px, transparent 1px);
   background-size: var(--grid-size) var(--grid-size);
   cursor: default;
   user-select: none;
@@ -301,6 +357,27 @@ textarea {
   background: var(--panel-bg);
   box-shadow: 0 18px 50px rgba(27, 42, 65, 0.18);
   backdrop-filter: blur(14px);
+}
+
+.dashboard-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  z-index: 20;
+  min-width: 150px;
+  padding: 8px 12px;
+  border-radius: 7px;
+  background: rgba(23, 32, 51, 0.94);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  pointer-events: none;
+  text-align: center;
+  transform: translateX(-50%);
+}
+
+.dashboard-toast.is-hidden {
+  display: none;
 }
 
 .util-modal {

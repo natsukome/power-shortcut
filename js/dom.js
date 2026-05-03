@@ -2,9 +2,11 @@
   const typeInput = document.querySelector("#typeInput");
   const contentInput = document.querySelector("#contentInput");
   const urlInput = document.querySelector("#urlInput");
+  const secretInput = document.querySelector("#secretInput");
 
   app.dom = {
     dashboard: document.querySelector("#dashboard"),
+    dashboardToast: document.querySelector("#dashboardToast"),
     gridLayer: document.querySelector("#gridLayer"),
     cardLayer: document.querySelector("#cardLayer"),
     cardConfigModal: document.querySelector("#cardConfigModal"),
@@ -22,6 +24,8 @@
     contentField: contentInput.closest("label"),
     urlInput,
     urlField: urlInput.closest("label"),
+    secretInput,
+    secretField: secretInput.closest("label"),
     widthInput: document.querySelector("#widthInput"),
     heightInput: document.querySelector("#heightInput"),
   };

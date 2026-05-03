@@ -8,9 +8,12 @@
     configCardMeta,
     contentField,
     contentInput,
+    dashboardToast,
     gridLayer,
     heightInput,
     saveConfigButton,
+    secretField,
+    secretInput,
     titleInput,
     typeField,
     typeInput,
@@ -29,6 +32,7 @@
     renderCards();
     renderCardList();
     renderConfigModal();
+    renderToast();
   }
 
   function renderCards() {
@@ -58,6 +62,8 @@
     header.dataset.action = "move";
     if (card.type === "link" && card.url) {
       header.title = card.url;
+    } else if (card.type === "secret") {
+      header.title = "Click title to copy secret";
     }
 
     const heading = document.createElement("div");
@@ -94,7 +100,7 @@
     removeButton.dataset.action = "remove";
     removeButton.textContent = "Remove";
 
-    const body = card.type === "link" ? null : document.createElement("div");
+    const body = card.type === "link" || card.type === "secret" ? null : document.createElement("div");
 
     if (card.type === "board") {
       body.className = "card__body card__body--board";
@@ -123,6 +129,11 @@
     if (body) element.append(body);
     if (card.isMutable) element.append(resizeHandle);
     return element;
+  }
+
+  function renderToast() {
+    dashboardToast.textContent = state.toastMessage;
+    dashboardToast.classList.toggle("is-hidden", !state.toastMessage);
   }
 
   function renderCardList() {
@@ -189,10 +200,12 @@
     typeField.hidden = state.configMode === "edit";
     contentField.hidden = state.draft.type !== "text";
     urlField.hidden = state.draft.type !== "link";
+    secretField.hidden = state.draft.type !== "secret";
     typeInput.value = state.draft.type;
     titleInput.value = state.draft.title;
     contentInput.value = state.draft.content;
     urlInput.value = state.draft.url ?? "";
+    secretInput.value = state.draft.secret ?? "";
     widthInput.value = state.draft.width;
     heightInput.value = state.draft.height;
   }
