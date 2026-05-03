@@ -14,6 +14,8 @@
     titleInput,
     typeField,
     typeInput,
+    urlField,
+    urlInput,
     widthInput,
   } = app.dom;
   const { state } = app;
@@ -54,6 +56,9 @@
     const header = document.createElement("header");
     header.className = "card__header";
     header.dataset.action = "move";
+    if (card.type === "link" && card.url) {
+      header.title = card.url;
+    }
 
     const heading = document.createElement("div");
     heading.className = "card__heading";
@@ -89,10 +94,10 @@
     removeButton.dataset.action = "remove";
     removeButton.textContent = "Remove";
 
-    const body = document.createElement("div");
-    body.className = card.type === "board" ? "card__body card__body--board" : "card__body";
+    const body = card.type === "link" ? null : document.createElement("div");
 
     if (card.type === "board") {
+      body.className = "card__body card__body--board";
       const boardLayer = document.createElement("div");
       boardLayer.className = "board-layer";
       boardLayer.dataset.boardId = card.id;
@@ -100,7 +105,8 @@
         ...state.cards.filter((child) => child.parentId === card.id).map((child) => createCardElement(child)),
       );
       body.append(boardLayer);
-    } else {
+    } else if (card.type === "text") {
+      body.className = "card__body";
       body.textContent = card.content;
     }
 
@@ -113,7 +119,8 @@
     actions.append(mutabilityButton);
     if (card.isMutable) actions.append(editButton, removeButton);
     header.append(heading, actions);
-    element.append(header, body);
+    element.append(header);
+    if (body) element.append(body);
     if (card.isMutable) element.append(resizeHandle);
     return element;
   }
@@ -180,10 +187,12 @@
     configCardMeta.textContent = state.configMode === "create" ? "New card" : "Edit card";
     saveConfigButton.textContent = state.configMode === "create" ? "Add" : "Save";
     typeField.hidden = state.configMode === "edit";
-    contentField.hidden = state.draft.type === "board";
+    contentField.hidden = state.draft.type !== "text";
+    urlField.hidden = state.draft.type !== "link";
     typeInput.value = state.draft.type;
     titleInput.value = state.draft.title;
     contentInput.value = state.draft.content;
+    urlInput.value = state.draft.url ?? "";
     widthInput.value = state.draft.width;
     heightInput.value = state.draft.height;
   }

@@ -117,6 +117,20 @@ textarea {
   box-shadow: 0 8px 20px rgba(27, 42, 65, 0.1);
 }
 
+.card--link {
+  min-height: 0;
+  height: auto !important;
+}
+
+.card--link .card__header {
+  border-bottom: 0;
+  cursor: move;
+}
+
+.card--link .card__title {
+  cursor: pointer;
+}
+
 .card__header {
   display: flex;
   align-items: center;
@@ -218,13 +232,15 @@ textarea {
 
 .card__body {
   flex: 1;
-  padding: 10px;
+  padding: 6px 10px 10px 6px;
   overflow-x: hidden;
   overflow-y: auto;
   color: #334155;
+  cursor: default;
   font-size: 13px;
   line-height: 1.45;
   overflow-wrap: anywhere;
+  user-select: text;
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -238,6 +254,8 @@ textarea {
     linear-gradient(rgba(28, 39, 57, 0.1) 1px, transparent 1px),
     linear-gradient(90deg, rgba(28, 39, 57, 0.1) 1px, transparent 1px);
   background-size: var(--grid-size) var(--grid-size);
+  cursor: default;
+  user-select: none;
 }
 
 .board-layer {

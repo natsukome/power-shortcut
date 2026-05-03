@@ -1,6 +1,7 @@
 (function initDom(app) {
   const typeInput = document.querySelector("#typeInput");
   const contentInput = document.querySelector("#contentInput");
+  const urlInput = document.querySelector("#urlInput");
 
   app.dom = {
     dashboard: document.querySelector("#dashboard"),
@@ -19,6 +20,8 @@
     titleInput: document.querySelector("#titleInput"),
     contentInput,
     contentField: contentInput.closest("label"),
+    urlInput,
+    urlField: urlInput.closest("label"),
     widthInput: document.querySelector("#widthInput"),
     heightInput: document.querySelector("#heightInput"),
   };

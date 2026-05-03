@@ -38,6 +38,7 @@
           type: VALID_CARD_TYPES.has(card.type) ? card.type : "text",
           title: typeof card.title === "string" ? card.title : "Untitled",
           content: typeof card.content === "string" ? card.content : "",
+          url: typeof card.url === "string" ? card.url : "",
           isMutable: typeof card.isMutable === "boolean" ? card.isMutable : true,
           x: Number.isFinite(Number(card.x)) ? Number(card.x) : 0,
           y: Number.isFinite(Number(card.y)) ? Number(card.y) : 0,

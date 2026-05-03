@@ -11,6 +11,7 @@
     saveConfigButton,
     titleInput,
     typeInput,
+    urlInput,
     widthInput,
     contentInput,
   } = app.dom;
@@ -27,6 +28,18 @@
     snap,
     syncDraftFromInputs,
   } = app.cardModel;
+
+  function normalizeUrl(url) {
+    const trimmedUrl = url.trim();
+    if (!trimmedUrl) return "";
+    return /^[a-z][a-z0-9+.-]*:\/\//i.test(trimmedUrl) ? trimmedUrl : `https://${trimmedUrl}`;
+  }
+
+  function openLinkCard(card) {
+    const url = normalizeUrl(card.url ?? "");
+    if (!url) return;
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
 
   function openCreateConfig() {
     state.configMode = "create";
@@ -46,6 +59,7 @@
       type: card.type,
       title: card.title,
       content: card.content,
+      url: card.url ?? "",
       width: card.width,
       height: card.height,
     };
@@ -234,8 +248,11 @@
       type: action,
       pointerId: event.pointerId,
       cardId: card.id,
+      startedOnLinkTitle: Boolean(event.target.closest(".card--link .card__title")),
       startBoardX: boardPoint.x,
       startBoardY: boardPoint.y,
+      startClientX: event.clientX,
+      startClientY: event.clientY,
       startX: card.x,
       startY: card.y,
       startWidth: card.width,
@@ -287,6 +304,18 @@
 
     if (interaction.type === "move") {
       const card = state.cards.find((item) => item.id === interaction.cardId);
+      const movedDistance = Math.hypot(event.clientX - interaction.startClientX, event.clientY - interaction.startClientY);
+      const clickedElement = document.elementFromPoint(event.clientX, event.clientY);
+      const clickedSameTitle = clickedElement?.closest(".card--link .card__title")?.closest(".card")?.dataset.cardId === card?.id;
+
+      if (card?.type === "link" && interaction.startedOnLinkTitle && movedDistance < 4 && clickedSameTitle) {
+        state.activeInteraction = null;
+        saveStoredState();
+        render();
+        openLinkCard(card);
+        return;
+      }
+
       const board = card ? boardAtPoint(event, card.id) : null;
       if (card && board) transferCardToBoard(card, board, event);
     }
@@ -324,6 +353,7 @@
     });
     titleInput.addEventListener("input", syncDraftFromInputs);
     contentInput.addEventListener("input", syncDraftFromInputs);
+    urlInput.addEventListener("input", syncDraftFromInputs);
     widthInput.addEventListener("input", syncDraftFromInputs);
     heightInput.addEventListener("input", syncDraftFromInputs);
 
