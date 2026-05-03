@@ -167,7 +167,7 @@
     if (card.type === "local-link") {
       const mode = document.createElement("span");
       mode.className = "card__type-mode";
-      mode.textContent = card.localLinkMode === "text" ? "text" : "app";
+      mode.textContent = card.localLinkMode === "text" ? "txt" : "app";
       type.append(mode);
     }
 
