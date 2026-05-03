@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UtilPage</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main id="dashboard" class="dashboard" aria-label="UtilPage dashboard">
+      <div id="gridLayer" class="grid-layer">
+        <section id="cardLayer" class="card-layer" aria-label="Cards"></section>
+      </div>
+    </main>
+
+    <aside class="util-modal" aria-label="Utility controls">
+      <header class="util-modal__header">
+        <div>
+          <h1>UtilPage</h1>
+          <p id="cardCount">0 cards</p>
+        </div>
+        <button id="addCardButton" class="button button--primary" type="button">Add card</button>
+      </header>
+
+      <section class="card-list-section" aria-label="Card list">
+        <h2>Cards</h2>
+        <div id="cardList" class="card-list"></div>
+      </section>
+    </aside>
+
+    <aside id="cardConfigModal" class="config-modal is-hidden" aria-label="Card configuration">
+      <header class="config-modal__header">
+        <div>
+          <h2>Card config</h2>
+          <p id="configCardMeta">No card selected</p>
+        </div>
+        <button id="closeConfigButton" class="icon-button" type="button" aria-label="Close card configuration">
+          x
+        </button>
+      </header>
+
+      <section class="editor" aria-label="Selected card editor">
+        <label>
+          Type
+          <select id="typeInput">
+            <option value="text">Text</option>
+            <option value="board">Board</option>
+          </select>
+        </label>
+        <label>
+          Title
+          <input id="titleInput" type="text" autocomplete="off" />
+        </label>
+        <label>
+          Content
+          <textarea id="contentInput" rows="4"></textarea>
+        </label>
+        <div class="editor__grid">
+          <label>
+            Width
+            <input id="widthInput" type="number" min="8" step="1" />
+          </label>
+          <label>
+            Height
+            <input id="heightInput" type="number" min="6" step="1" />
+          </label>
+        </div>
+        <div class="editor__actions">
+          <button id="cancelConfigButton" class="button" type="button">Cancel</button>
+          <button id="saveConfigButton" class="button button--primary" type="button">Add</button>
+        </div>
+      </section>
+    </aside>
+
+    <script src="app.js"></script>
+  </body>
+</html>
