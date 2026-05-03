@@ -44,6 +44,8 @@
         title: typeof card.title === "string" ? card.title : "Untitled",
         content: typeof card.content === "string" ? card.content : "",
         url: typeof card.url === "string" ? card.url : "",
+        localPath: typeof card.localPath === "string" ? card.localPath : "",
+        localLinkMode: card.localLinkMode === "text" ? "text" : "app",
         secret: typeof card.secret === "string" ? card.secret : "",
         isMutable: typeof card.isMutable === "boolean" ? card.isMutable : true,
         x: Number.isFinite(Number(card.x)) ? Number(card.x) : 0,

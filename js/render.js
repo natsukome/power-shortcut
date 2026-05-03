@@ -14,6 +14,10 @@
     heightInput,
     importContentInput,
     importModal,
+    localLinkModeField,
+    localLinkModeInput,
+    localPathField,
+    localPathInput,
     saveConfigButton,
     secretField,
     secretInput,
@@ -81,6 +85,16 @@
     return svg;
   }
 
+  function cardTypeLabel(type) {
+    return type === "local-link" ? "Link (Local)" : type;
+  }
+
+  function localLinkHref(card) {
+    const mode = card.localLinkMode === "text" ? "text" : "app";
+    const path = encodeURIComponent((card.localPath ?? "").trim());
+    return `explorerBridge://open?mode=${mode}&path=${path}`;
+  }
+
   function createCardElement(card, isDashboardCard = false) {
     const element = document.createElement("article");
     const isActiveCard =
@@ -106,6 +120,8 @@
     header.dataset.action = "move";
     if (card.type === "link" && card.url) {
       header.title = card.url;
+    } else if (card.type === "local-link" && card.localPath) {
+      header.title = card.localPath;
     } else if (card.type === "secret") {
       header.title = "Click title to copy secret";
     }
@@ -115,7 +131,15 @@
 
     const title = document.createElement("div");
     title.className = "card__title";
-    title.textContent = card.title || "Untitled";
+    if (card.type === "local-link") {
+      const anchor = document.createElement("a");
+      anchor.className = "card__title-link";
+      anchor.href = localLinkHref(card);
+      anchor.textContent = card.title || "Untitled";
+      title.append(anchor);
+    } else {
+      title.textContent = card.title || "Untitled";
+    }
     if (card.type === "board") {
       title.dataset.action = "toggle-board-collapse";
       title.title = isBoardCollapsed ? "Expand board" : "Collapse board";
@@ -123,7 +147,7 @@
 
     const type = document.createElement("div");
     type.className = "card__type";
-    type.textContent = card.type;
+    type.textContent = cardTypeLabel(card.type);
 
     const actions = document.createElement("div");
     actions.className = "card__actions";
@@ -166,7 +190,7 @@
       ),
     );
 
-    const body = card.type === "link" || card.type === "secret" ? null : document.createElement("div");
+    const body = card.type === "link" || card.type === "local-link" || card.type === "secret" ? null : document.createElement("div");
 
     if (card.type === "board") {
       body.className = "card__body card__body--board";
@@ -261,7 +285,7 @@
 
     const meta = document.createElement("span");
     meta.className = "card-list__meta";
-    meta.textContent = `${card.type} | ${card.width * GRID_SIZE}x${card.height * GRID_SIZE}px`;
+    meta.textContent = `${cardTypeLabel(card.type)} | ${card.width * GRID_SIZE}x${card.height * GRID_SIZE}px`;
 
     header.append(meta);
     item.append(header);
@@ -279,11 +303,15 @@
     typeField.hidden = state.configMode === "edit";
     contentField.hidden = state.draft.type !== "text";
     urlField.hidden = state.draft.type !== "link";
+    localPathField.hidden = state.draft.type !== "local-link";
+    localLinkModeField.hidden = state.draft.type !== "local-link";
     secretField.hidden = state.draft.type !== "secret";
     typeInput.value = state.draft.type;
     titleInput.value = state.draft.title;
     contentInput.value = state.draft.content;
     urlInput.value = state.draft.url ?? "";
+    localPathInput.value = state.draft.localPath ?? "";
+    localLinkModeInput.value = state.draft.localLinkMode === "text" ? "text" : "app";
     secretInput.value = state.draft.secret ?? "";
     widthInput.value = state.draft.width;
     heightInput.value = state.draft.height;

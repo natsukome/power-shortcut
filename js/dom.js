@@ -2,6 +2,8 @@
   const typeInput = document.querySelector("#typeInput");
   const contentInput = document.querySelector("#contentInput");
   const urlInput = document.querySelector("#urlInput");
+  const localPathInput = document.querySelector("#localPathInput");
+  const localLinkModeInput = document.querySelector("#localLinkModeInput");
   const secretInput = document.querySelector("#secretInput");
 
   app.dom = {
@@ -29,6 +31,10 @@
     contentField: contentInput.closest("label"),
     urlInput,
     urlField: urlInput.closest("label"),
+    localPathInput,
+    localPathField: localPathInput.closest("label"),
+    localLinkModeInput,
+    localLinkModeField: localLinkModeInput.closest("label"),
     secretInput,
     secretField: secretInput.closest("label"),
     widthInput: document.querySelector("#widthInput"),

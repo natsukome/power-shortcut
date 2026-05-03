@@ -57,6 +57,7 @@
             <option value="text">Text</option>
             <option value="board">Board</option>
             <option value="link">Link</option>
+            <option value="local-link">Link (Local)</option>
             <option value="secret">Secret</option>
           </select>
         </label>
@@ -71,6 +72,17 @@
         <label>
           URL
           <input id="urlInput" type="url" autocomplete="url" />
+        </label>
+        <label>
+          Local path
+          <input id="localPathInput" type="text" autocomplete="off" />
+        </label>
+        <label>
+          Local link mode
+          <select id="localLinkModeInput">
+            <option value="app">App</option>
+            <option value="text">Text</option>
+          </select>
         </label>
         <label>
           Secret

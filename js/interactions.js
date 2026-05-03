@@ -25,6 +25,8 @@
     heightInput,
     importContentInput,
     importButton,
+    localLinkModeInput,
+    localPathInput,
     saveConfigButton,
     secretInput,
     titleInput,
@@ -143,6 +145,8 @@
       title: card.title,
       content: card.content,
       url: card.url ?? "",
+      localPath: card.localPath ?? "",
+      localLinkMode: card.localLinkMode === "text" ? "text" : "app",
       secret: card.secret ?? "",
       width: card.width,
       height: card.height,
@@ -388,6 +392,13 @@
       return;
     }
 
+    if (event.target.closest(".card--local-link .card__title-link")) {
+      state.activeInteraction = null;
+      saveStoredState();
+      render();
+      return;
+    }
+
     if (action === "toggle-board-collapse") {
       event.preventDefault();
       event.stopPropagation();
@@ -601,6 +612,8 @@
       title: typeof card.title === "string" && card.title.trim() ? card.title : "Untitled",
       content: type === "text" && typeof card.content === "string" ? card.content : "",
       url: type === "link" && typeof card.url === "string" ? card.url : "",
+      localPath: type === "local-link" && typeof card.localPath === "string" ? card.localPath : "",
+      localLinkMode: type === "local-link" && card.localLinkMode === "text" ? "text" : "app",
       secret: type === "secret" && typeof card.secret === "string" ? card.secret : "",
       isMutable: typeof card.isMutable === "boolean" ? card.isMutable : true,
       x: position?.x ?? importedNumber(card.x, 0),
@@ -783,6 +796,8 @@
     titleInput.addEventListener("input", syncDraftFromInputs);
     contentInput.addEventListener("input", syncDraftFromInputs);
     urlInput.addEventListener("input", syncDraftFromInputs);
+    localPathInput.addEventListener("input", syncDraftFromInputs);
+    localLinkModeInput.addEventListener("input", syncDraftFromInputs);
     secretInput.addEventListener("input", syncDraftFromInputs);
     widthInput.addEventListener("input", syncDraftFromInputs);
     heightInput.addEventListener("input", syncDraftFromInputs);

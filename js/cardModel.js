@@ -11,7 +11,17 @@
     PLACEMENT_SEARCH_RADIUS_UNITS,
     VALID_CARD_TYPES,
   } = app.constants;
-  const { contentInput, heightInput, secretInput, titleInput, typeInput, urlInput, widthInput } = app.dom;
+  const {
+    contentInput,
+    heightInput,
+    localLinkModeInput,
+    localPathInput,
+    secretInput,
+    titleInput,
+    typeInput,
+    urlInput,
+    widthInput,
+  } = app.dom;
   const { state } = app;
 
   function selectedCard() {
@@ -25,6 +35,8 @@
       title: `Card ${index}`,
       content: "",
       url: "",
+      localPath: "",
+      localLinkMode: "app",
       secret: "",
       width: DEFAULT_CARD_WIDTH_UNITS,
       height: DEFAULT_CARD_HEIGHT_UNITS,
@@ -38,6 +50,8 @@
       title: titleInput.value.trim() || "Untitled",
       content: type === "text" ? contentInput.value : "",
       url: type === "link" ? urlInput.value.trim() : "",
+      localPath: type === "local-link" ? localPathInput.value.trim() : "",
+      localLinkMode: type === "local-link" && localLinkModeInput.value === "text" ? "text" : "app",
       secret: type === "secret" ? secretInput.value : "",
       width: Math.max(MIN_CARD_WIDTH_UNITS, Number(widthInput.value) || DEFAULT_CARD_WIDTH_UNITS),
       height: Math.max(MIN_CARD_HEIGHT_UNITS, Number(heightInput.value) || DEFAULT_CARD_HEIGHT_UNITS),
