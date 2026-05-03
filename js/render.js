@@ -113,6 +113,7 @@
       state.activeInteraction?.cardId === card.id &&
       (state.activeInteraction.type === "move" || state.activeInteraction.type === "resize");
     const isBoardCollapsed = card.type === "board" && state.collapsedBoardCardIds.has(card.id);
+    const canResize = card.isMutable && card.type !== "link" && card.type !== "local-link" && card.type !== "secret";
 
     element.className = `card card--${card.type}${card.isMutable ? "" : " card--immutable"}${
       isBoardCollapsed ? " is-collapsed" : ""
@@ -233,7 +234,7 @@
     header.append(heading, actions);
     element.append(header);
     if (body && !isBoardCollapsed) element.append(body);
-    if (card.isMutable) element.append(resizeHandle);
+    if (canResize) element.append(resizeHandle);
     return element;
   }
 

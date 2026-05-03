@@ -188,6 +188,8 @@ textarea {
 .card--local-link .card__title,
 .card--secret .card__title {
   cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .card--board .card__title {
@@ -233,7 +235,7 @@ textarea {
 
 .card__title-link {
   color: inherit;
-  text-decoration: none;
+  text-decoration: inherit;
 }
 
 .card__type {
@@ -251,6 +253,15 @@ textarea {
   display: flex;
   flex: 0 0 auto;
   gap: 3px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+
+.card:hover .card__actions,
+.card:focus-within .card__actions {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .card__action {
