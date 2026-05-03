@@ -105,7 +105,13 @@
     mutabilityButton.dataset.action = "toggle-mutability";
     mutabilityButton.title = card.isMutable ? "Make immutable" : "Make mutable";
     mutabilityButton.setAttribute("aria-label", card.isMutable ? "Make immutable" : "Make mutable");
-    mutabilityButton.textContent = card.isMutable ? "U" : "L";
+    mutabilityButton.append(
+      createIcon(
+        card.isMutable
+          ? "M12 17a2 2 0 0 0 2-2c0-.74-.4-1.38-1-1.72V11h-2v2.28A2 2 0 0 0 12 17zm6-8H9V6c0-1.66 1.34-3 3-3s3 1.34 3 3h2c0-2.76-2.24-5-5-5S7 3.24 7 6v3H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V11c0-1.1-.9-2-2-2z"
+          : "M12 17a2 2 0 0 0 2-2c0-.74-.4-1.38-1-1.72V11h-2v2.28A2 2 0 0 0 12 17zm6-8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v3H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V11c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v3H9V6z",
+      ),
+    );
 
     const editButton = document.createElement("button");
     editButton.className = "card__action card__action--edit";

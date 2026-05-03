@@ -30,5 +30,7 @@
     heightInput: document.querySelector("#heightInput"),
     zoomInButton: document.querySelector("#zoomInButton"),
     zoomOutButton: document.querySelector("#zoomOutButton"),
+    exportButton: document.querySelector("#exportButton"),
+    importButton: document.querySelector("#importButton"),
   };
 })(window.UtilPage ??= {});

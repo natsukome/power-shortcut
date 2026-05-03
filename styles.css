@@ -267,7 +267,7 @@ textarea {
   min-width: 22px;
   width: 22px;
   padding: 0;
-  color: transparent;
+  color: var(--card-accent);
   position: relative;
 }
 
@@ -276,35 +276,6 @@ textarea {
   height: 14px;
   fill: currentColor;
   pointer-events: none;
-}
-
-.card__action--icon::before {
-  content: "";
-  position: absolute;
-  left: 7px;
-  top: 9px;
-  width: 8px;
-  height: 6px;
-  border: 2px solid var(--card-accent);
-  border-radius: 2px;
-}
-
-.card__action--icon::after {
-  content: "";
-  position: absolute;
-  left: 9px;
-  top: 4px;
-  width: 5px;
-  height: 7px;
-  border: 2px solid var(--card-accent);
-  border-bottom: 0;
-  border-radius: 6px 6px 0 0;
-}
-
-.card:not(.card--immutable) .card__action--icon::after {
-  left: 11px;
-  transform: rotate(30deg);
-  transform-origin: left bottom;
 }
 
 .card__body {
@@ -698,6 +669,13 @@ textarea {
 .card-list-section {
   min-height: 0;
   overflow: hidden;
+}
+
+.util-modal__footer {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--panel-border);
 }
 
 .card-list {

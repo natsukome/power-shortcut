@@ -7,7 +7,9 @@
     cardList,
     closeConfigButton,
     dashboard,
+    exportButton,
     heightInput,
+    importButton,
     saveConfigButton,
     secretInput,
     titleInput,
@@ -19,7 +21,7 @@
     contentInput,
   } = app.dom;
   const { state } = app;
-  const { saveStoredState } = app.storage;
+  const { saveStoredState, importStateData } = app.storage;
   const { render, renderConfigModal, applyPan } = app.rendering;
   const {
     defaultDraft,
@@ -508,6 +510,45 @@
     render();
   }
 
+  async function exportDashboard() {
+    const data = JSON.stringify({
+      cards: state.cards,
+      selectedId: state.selectedId,
+      collapsedBoardIds: [...state.collapsedBoardIds],
+      collapsedBoardCardIds: [...state.collapsedBoardCardIds],
+      pan: state.pan,
+      zoom: state.zoom,
+    });
+
+    try {
+      await navigator.clipboard.writeText(data);
+      showToast("Exported to clipboard");
+    } catch {
+      showToast("Export failed");
+    }
+  }
+
+  async function importDashboard() {
+    let text;
+    try {
+      text = await navigator.clipboard.readText();
+    } catch {
+      showToast("Clipboard access denied");
+      return;
+    }
+
+    try {
+      const data = JSON.parse(text);
+      if (typeof data !== "object" || data === null) throw new Error("Invalid data");
+      importStateData(data);
+      saveStoredState();
+      render();
+      showToast("Imported from clipboard");
+    } catch {
+      showToast("Import failed: invalid data");
+    }
+  }
+
   function attachEventHandlers() {
     dashboard.addEventListener("pointerdown", startDashboardPan);
     dashboard.addEventListener("wheel", handleDashboardWheel, { passive: false });
@@ -522,6 +563,8 @@
     saveConfigButton.addEventListener("click", saveConfig);
     zoomInButton.addEventListener("click", () => setZoom(state.zoom + ZOOM_STEP));
     zoomOutButton.addEventListener("click", () => setZoom(state.zoom - ZOOM_STEP));
+    exportButton.addEventListener("click", exportDashboard);
+    importButton.addEventListener("click", importDashboard);
 
     typeInput.addEventListener("input", () => {
       syncDraftFromInputs();
