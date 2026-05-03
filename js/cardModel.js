@@ -89,8 +89,8 @@
   function findEmptyCardPosition(width, height, parentId = null, preferredPosition = null, excludedIds = new Set()) {
     const preferred =
       preferredPosition ?? {
-        x: Math.round((window.innerWidth / 2 - state.pan.x) / GRID_SIZE - width / 2),
-        y: Math.round((window.innerHeight / 2 - state.pan.y) / GRID_SIZE - height / 2),
+        x: Math.round((window.innerWidth / 2 - state.pan.x) / (GRID_SIZE * state.zoom) - width / 2),
+        y: Math.round((window.innerHeight / 2 - state.pan.y) / (GRID_SIZE * state.zoom) - height / 2),
       };
 
     for (let radius = 0; radius <= PLACEMENT_SEARCH_RADIUS_UNITS; radius += 1) {

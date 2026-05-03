@@ -6,6 +6,8 @@
     MIN_CARD_WIDTH_UNITS,
     STORAGE_KEY,
     VALID_CARD_TYPES,
+    ZOOM_MAX,
+    ZOOM_MIN,
   } = app.constants;
 
   const state = {
@@ -19,6 +21,7 @@
     activeInteraction: null,
     dropTargetBoardId: null,
     exitHintBoardId: null,
+    zoom: 1,
     pan: {
       x: window.innerWidth / 2,
       y: window.innerHeight / 2,
@@ -62,6 +65,9 @@
         x: Number.isFinite(Number(pan.x)) ? Number(pan.x) : state.pan.x,
         y: Number.isFinite(Number(pan.y)) ? Number(pan.y) : state.pan.y,
       };
+      state.zoom = Number.isFinite(Number(storedState.zoom))
+        ? Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Number(storedState.zoom)))
+        : state.zoom;
       state.collapsedBoardIds = new Set(
         Array.isArray(storedState.collapsedBoardIds)
           ? storedState.collapsedBoardIds.filter((id) => restoredIds.has(id))
@@ -86,6 +92,7 @@
         collapsedBoardIds: [...state.collapsedBoardIds],
         collapsedBoardCardIds: [...state.collapsedBoardCardIds],
         pan: state.pan,
+        zoom: state.zoom,
       }),
     );
   }

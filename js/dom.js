@@ -28,5 +28,7 @@
     secretField: secretInput.closest("label"),
     widthInput: document.querySelector("#widthInput"),
     heightInput: document.querySelector("#heightInput"),
+    zoomInButton: document.querySelector("#zoomInButton"),
+    zoomOutButton: document.querySelector("#zoomOutButton"),
   };
 })(window.UtilPage ??= {});

@@ -240,9 +240,10 @@ textarea {
 }
 
 .card__action {
-  min-width: 34px;
+  min-width: 22px;
+  width: 22px;
   height: 20px;
-  padding: 0 5px;
+  padding: 0;
   border: 1px solid #c7d0df;
   border-radius: 5px;
   background: #ffffff;
@@ -250,6 +251,7 @@ textarea {
   cursor: pointer;
   font-size: 10px;
   font-weight: 700;
+  position: relative;
 }
 
 .card__action:hover {
@@ -267,6 +269,13 @@ textarea {
   padding: 0;
   color: transparent;
   position: relative;
+}
+
+.card__action-icon {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+  pointer-events: none;
 }
 
 .card__action--icon::before {
@@ -492,6 +501,35 @@ textarea {
 
 .dashboard-toast.is-hidden {
   display: none;
+}
+
+.zoom-controls {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 12;
+  display: flex;
+  gap: 6px;
+}
+
+.zoom-button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--panel-border);
+  border-radius: 7px;
+  background: var(--panel-bg);
+  box-shadow: 0 10px 24px rgba(27, 42, 65, 0.14);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.zoom-button:hover {
+  background: #ffffff;
 }
 
 .util-modal {

@@ -24,7 +24,7 @@
   const { state } = app;
 
   function applyPan() {
-    gridLayer.style.transform = `translate(${state.pan.x}px, ${state.pan.y}px)`;
+    gridLayer.style.transform = `translate(${state.pan.x}px, ${state.pan.y}px) scale(${state.zoom})`;
   }
 
   function render() {
@@ -38,6 +38,18 @@
   function renderCards() {
     const dashboardCards = state.cards.filter((card) => card.parentId === null);
     cardLayer.replaceChildren(...dashboardCards.map((card) => createCardElement(card, true)));
+  }
+
+  function createIcon(pathData) {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+
+    svg.setAttribute("class", "card__action-icon");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("aria-hidden", "true");
+    path.setAttribute("d", pathData);
+    svg.append(path);
+    return svg;
   }
 
   function createCardElement(card, isDashboardCard = false) {
@@ -96,16 +108,28 @@
     mutabilityButton.textContent = card.isMutable ? "U" : "L";
 
     const editButton = document.createElement("button");
-    editButton.className = "card__action";
+    editButton.className = "card__action card__action--edit";
     editButton.type = "button";
     editButton.dataset.action = "edit";
-    editButton.textContent = "Edit";
+    editButton.title = "Edit";
+    editButton.setAttribute("aria-label", "Edit");
+    editButton.append(
+      createIcon(
+        "M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z",
+      ),
+    );
 
     const removeButton = document.createElement("button");
     removeButton.className = "card__action card__action--danger";
     removeButton.type = "button";
     removeButton.dataset.action = "remove";
-    removeButton.textContent = "Remove";
+    removeButton.title = "Remove";
+    removeButton.setAttribute("aria-label", "Remove");
+    removeButton.append(
+      createIcon(
+        "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM8 9h8v10H8V9zm7.5-5-1-1h-5l-1 1H5v2h14V4z",
+      ),
+    );
 
     const body = card.type === "link" || card.type === "secret" ? null : document.createElement("div");
 

@@ -1,5 +1,5 @@
 (function initInteractions(app) {
-  const { MIN_CARD_HEIGHT_UNITS, MIN_CARD_WIDTH_UNITS } = app.constants;
+  const { GRID_SIZE, MIN_CARD_HEIGHT_UNITS, MIN_CARD_WIDTH_UNITS, ZOOM_MAX, ZOOM_MIN, ZOOM_STEP } = app.constants;
   const {
     addCardButton,
     cancelConfigButton,
@@ -14,6 +14,8 @@
     typeInput,
     urlInput,
     widthInput,
+    zoomInButton,
+    zoomOutButton,
     contentInput,
   } = app.dom;
   const { state } = app;
@@ -71,6 +73,32 @@
       state.toastMessage = "";
       render();
     }, 1200);
+  }
+
+  function clampZoom(zoom) {
+    return Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoom));
+  }
+
+  function showZoomToast() {
+    showToast(`Zoom ${Math.round(state.zoom * 100)}%`);
+  }
+
+  function setZoom(nextZoom, anchorClientX = window.innerWidth / 2, anchorClientY = window.innerHeight / 2) {
+    const oldZoom = state.zoom;
+    const zoom = clampZoom(nextZoom);
+    if (zoom === oldZoom) {
+      showZoomToast();
+      return;
+    }
+
+    const anchorBoardX = (anchorClientX - state.pan.x) / oldZoom;
+    const anchorBoardY = (anchorClientY - state.pan.y) / oldZoom;
+    state.zoom = zoom;
+    state.pan.x = anchorClientX - anchorBoardX * zoom;
+    state.pan.y = anchorClientY - anchorBoardY * zoom;
+    saveStoredState();
+    render();
+    showZoomToast();
   }
 
   function openCreateConfig() {
@@ -161,15 +189,15 @@
       const rect = boardLayer?.getBoundingClientRect();
       if (rect) {
         return {
-          x: snap(event.clientX - rect.left),
-          y: snap(event.clientY - rect.top),
+          x: snap((event.clientX - rect.left) / state.zoom),
+          y: snap((event.clientY - rect.top) / state.zoom),
         };
       }
     }
 
     return {
-      x: snap(event.clientX - state.pan.x),
-      y: snap(event.clientY - state.pan.y),
+      x: snap((event.clientX - state.pan.x) / state.zoom),
+      y: snap((event.clientY - state.pan.y) / state.zoom),
     };
   }
 
@@ -281,6 +309,13 @@
     };
     dashboard.classList.add("is-panning");
     dashboard.setPointerCapture(event.pointerId);
+  }
+
+  function handleDashboardWheel(event) {
+    if (event.target.closest(".util-modal, .config-modal")) return;
+    event.preventDefault();
+    const direction = event.deltaY > 0 ? -1 : 1;
+    setZoom(state.zoom + direction * ZOOM_STEP, event.clientX, event.clientY);
   }
 
   function startCardInteraction(event) {
@@ -475,6 +510,7 @@
 
   function attachEventHandlers() {
     dashboard.addEventListener("pointerdown", startDashboardPan);
+    dashboard.addEventListener("wheel", handleDashboardWheel, { passive: false });
     cardLayer.addEventListener("pointerdown", startCardInteraction);
     window.addEventListener("pointermove", moveInteraction);
     window.addEventListener("pointerup", endInteraction);
@@ -484,6 +520,8 @@
     closeConfigButton.addEventListener("click", closeConfig);
     cancelConfigButton.addEventListener("click", closeConfig);
     saveConfigButton.addEventListener("click", saveConfig);
+    zoomInButton.addEventListener("click", () => setZoom(state.zoom + ZOOM_STEP));
+    zoomOutButton.addEventListener("click", () => setZoom(state.zoom - ZOOM_STEP));
 
     typeInput.addEventListener("input", () => {
       syncDraftFromInputs();
