@@ -19,6 +19,7 @@
     toastMessage: "",
     searchText: "",
     searchResultIds: null,
+    searchResultFields: new Map(),
     configMode: null,
     draft: null,
     createTarget: null,

@@ -1156,8 +1156,31 @@ textarea {
 .card-list__meta {
   flex: 0 0 auto;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 11px;
+  font-weight: 700;
   white-space: nowrap;
+}
+
+.card-list__badges {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 42%;
+  gap: 3px;
+}
+
+.card-list__badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 18px;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: rgba(22, 114, 91, 0.12);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 @media (max-width: 720px) {

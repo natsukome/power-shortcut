@@ -404,9 +404,22 @@
 
     const meta = document.createElement("span");
     meta.className = "card-list__meta";
-    meta.textContent = `${cardTypeLabel(card)} | ${card.width * GRID_SIZE}x${card.height * GRID_SIZE}px`;
-
+    meta.textContent = cardTypeLabel(card);
     header.append(meta);
+
+    const matchedFields = visibleIds ? (state.searchResultFields.get(card.id) ?? []) : [];
+    if (matchedFields.length > 0) {
+      const badges = document.createElement("span");
+      badges.className = "card-list__badges";
+      matchedFields.forEach((field) => {
+        const badge = document.createElement("span");
+        badge.className = "card-list__badge";
+        badge.textContent = field;
+        badges.append(badge);
+      });
+      header.append(badges);
+    }
+
     item.append(header);
     return isCollapsed ? [item] : [item, ...children.flatMap((child) => createCardListRows(child, depth + 1, visibleIds))];
   }

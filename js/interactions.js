@@ -93,17 +93,17 @@
     return false;
   }
 
-  function searchableCardText(card) {
-    const fields = [card.title];
-    if (card.type === "text") fields.push(card.content);
-    if (card.type === "link") fields.push(card.url);
-    if (card.type === "local-link") fields.push(card.localPath);
-    return fields.filter(Boolean).join(" ");
+  function searchableCardFields(card) {
+    const fields = [{ label: "title", text: card.title }];
+    if (card.type === "text") fields.push({ label: "text content", text: card.content });
+    if (card.type === "link") fields.push({ label: "link", text: card.url });
+    if (card.type === "local-link") fields.push({ label: "local link", text: card.localPath });
+    return fields.filter((field) => field.text);
   }
 
-  function searchScore(card, query) {
+  function searchTextScore(text, query) {
     const normalizedQuery = normalizeSearchText(query);
-    const haystack = normalizeSearchText(searchableCardText(card));
+    const haystack = normalizeSearchText(text);
     if (!normalizedQuery || !haystack) return 0;
     if (haystack.includes(normalizedQuery)) return 100 + normalizedQuery.length;
 
@@ -114,21 +114,32 @@
     return 0;
   }
 
+  function searchScore(card, query) {
+    return Math.max(0, ...searchableCardFields(card).map((field) => searchTextScore(field.text, query)));
+  }
+
+  function searchFieldLabels(card, query) {
+    return searchableCardFields(card)
+      .filter((field) => searchTextScore(field.text, query) > 0)
+      .map((field) => field.label);
+  }
+
   function applyCardSearch() {
     const query = state.searchText.trim();
     if (query.length <= 1) {
       state.searchResultIds = null;
+      state.searchResultFields = new Map();
       render();
       return;
     }
 
-    state.searchResultIds = new Set(
-      state.cards
-        .map((card) => ({ card, score: searchScore(card, query) }))
-        .filter((result) => result.score > 0)
-        .sort((first, second) => second.score - first.score || first.card.title.localeCompare(second.card.title))
-        .map((result) => result.card.id),
-    );
+    const results = state.cards
+      .map((card) => ({ card, fields: searchFieldLabels(card, query), score: searchScore(card, query) }))
+      .filter((result) => result.score > 0)
+      .sort((first, second) => second.score - first.score || first.card.title.localeCompare(second.card.title));
+
+    state.searchResultIds = new Set(results.map((result) => result.card.id));
+    state.searchResultFields = new Map(results.map((result) => [result.card.id, result.fields]));
     render();
   }
 
@@ -136,6 +147,7 @@
     window.clearTimeout(searchTimerId);
     if (state.searchText.trim().length <= 1) {
       state.searchResultIds = null;
+      state.searchResultFields = new Map();
       render();
       return;
     }
@@ -147,6 +159,7 @@
     window.clearTimeout(searchTimerId);
     state.searchText = "";
     state.searchResultIds = null;
+    state.searchResultFields = new Map();
     render();
     cardSearchInput.focus();
   }
