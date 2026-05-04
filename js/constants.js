@@ -11,7 +11,7 @@
     PLACEMENT_GAP_UNITS: 1,
     PLACEMENT_SEARCH_RADIUS_UNITS: 240,
     STORAGE_KEY: "utilpage.dashboard.v1",
-    VALID_CARD_TYPES: new Set(["text", "board", "link", "local-link", "secret"]),
+    VALID_CARD_TYPES: new Set(["text", "board", "link", "local-link", "image", "secret"]),
     VALID_COLOR_THEMES: new Set([
       "slate",
       "zinc",

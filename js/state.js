@@ -19,6 +19,7 @@
     toastMessage: "",
     configMode: null,
     draft: null,
+    createTarget: null,
     contextMenu: null,
     importModalOpen: false,
     importContent: "",
@@ -36,6 +37,7 @@
   function defaultColorTheme(type) {
     if (type === "board" || type === "local-link") return "teal";
     if (type === "link") return "violet";
+    if (type === "image") return "sky";
     if (type === "secret") return "orange";
     if (type === "text") return "blue";
     return "slate";
@@ -56,6 +58,7 @@
         url: typeof card.url === "string" ? card.url : "",
         localPath: typeof card.localPath === "string" ? card.localPath : "",
         localLinkMode: card.localLinkMode === "text" ? "text" : "app",
+        imagePath: typeof card.imagePath === "string" ? card.imagePath : "",
         secret: typeof card.secret === "string" ? card.secret : "",
         colorTheme: VALID_COLOR_THEMES.has(card.colorTheme)
           ? card.colorTheme

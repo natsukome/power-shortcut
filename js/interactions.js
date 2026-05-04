@@ -28,6 +28,7 @@
     exportButton,
     gridToggleButton,
     heightInput,
+    imagePathInput,
     importContentInput,
     importButton,
     localLinkModeInput,
@@ -155,9 +156,23 @@
     showZoomToast();
   }
 
-  function openCreateConfig() {
+  function openCreateConfig(type = "text", target = null) {
+    const cardType = VALID_CARD_TYPES.has(type) ? type : "text";
     state.configMode = "create";
     state.draft = defaultDraft();
+    state.draft.type = cardType;
+    state.draft.colorTheme = defaultColorTheme(cardType);
+    state.createTarget = target
+      ? {
+          parentId: typeof target.parentId === "string" ? target.parentId : null,
+          preferredPosition: target.preferredPosition
+            ? {
+                x: Number(target.preferredPosition.x) || 0,
+                y: Number(target.preferredPosition.y) || 0,
+              }
+            : null,
+        }
+      : null;
     render();
     titleInput.focus();
     titleInput.select();
@@ -177,6 +192,7 @@
       url: card.url ?? "",
       localPath: card.localPath ?? "",
       localLinkMode: card.localLinkMode === "text" ? "text" : "app",
+      imagePath: card.imagePath ?? "",
       secret: card.secret ?? "",
       width: card.width,
       height: card.height,
@@ -189,6 +205,7 @@
   function closeConfig() {
     state.configMode = null;
     state.draft = null;
+    state.createTarget = null;
     render();
   }
 
@@ -218,16 +235,18 @@
     const draft = normalizeDraft();
 
     if (state.configMode === "create") {
-      const position = findEmptyCardPosition(draft.width, draft.height);
+      const target = state.createTarget ?? {};
+      const parentId = target.parentId ?? null;
+      const position = findEmptyCardPosition(draft.width, draft.height, parentId, target.preferredPosition ?? null);
       const card = {
         id: crypto.randomUUID(),
-        parentId: null,
+        parentId,
         isMutable: true,
         ...draft,
-        x: position.x,
-        y: position.y,
+        x: parentId ? Math.max(0, position.x) : position.x,
+        y: parentId ? Math.max(0, position.y) : position.y,
       };
-      clampDashboardCard(card);
+      if (parentId === null) clampDashboardCard(card);
       state.cards.push(card);
       state.selectedId = card.id;
       saveStoredState();
@@ -650,6 +669,7 @@
   function defaultColorTheme(type) {
     if (type === "board" || type === "local-link") return "teal";
     if (type === "link") return "violet";
+    if (type === "image") return "sky";
     if (type === "secret") return "orange";
     if (type === "text") return "blue";
     return "slate";
@@ -668,6 +688,7 @@
       url: type === "link" && typeof card.url === "string" ? card.url : "",
       localPath: type === "local-link" && typeof card.localPath === "string" ? card.localPath : "",
       localLinkMode: type === "local-link" && card.localLinkMode === "text" ? "text" : "app",
+      imagePath: type === "image" && typeof card.imagePath === "string" ? card.imagePath : "",
       secret: type === "secret" && typeof card.secret === "string" ? card.secret : "",
       isMutable: typeof card.isMutable === "boolean" ? card.isMutable : true,
       x: position?.x ?? importedNumber(card.x, 0),
@@ -765,6 +786,23 @@
     importTextData(importContentInput.value, { closeModalOnSuccess: true });
   }
 
+  function openCreateContextMenu(event, parentId = null) {
+    event.preventDefault();
+    event.stopPropagation();
+    hideContextMenu(false);
+
+    const preferredPosition = pointerToBoardUnits(event, parentId);
+    state.contextMenu = {
+      mode: "create",
+      parentId,
+      preferredPosition,
+      x: event.clientX,
+      y: event.clientY,
+    };
+    if (parentId) state.selectedId = parentId;
+    render();
+  }
+
   function openCardContextMenu(event, cardId) {
     if (!state.cards.some((card) => card.id === cardId)) return;
 
@@ -772,6 +810,7 @@
     event.stopPropagation();
     state.selectedId = cardId;
     state.contextMenu = {
+      mode: "card",
       cardId,
       x: event.clientX,
       y: event.clientY,
@@ -795,16 +834,74 @@
     openCardContextMenu(event, item.dataset.cardId);
   }
 
+  function showImageContextMenu(event) {
+    const image = event.target.closest(".card__image");
+    const cardElement = image?.closest(".card");
+    if (!image || !cardElement) return;
+
+    const card = state.cards.find((item) => item.id === cardElement.dataset.cardId && item.type === "image");
+    if (!card || !card.imagePath) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    state.selectedId = card.id;
+    state.contextMenu = {
+      mode: "image",
+      cardId: card.id,
+      imagePath: card.imagePath,
+      x: event.clientX,
+      y: event.clientY,
+    };
+    render();
+  }
+
+  function showCreateContextMenu(event) {
+    if (event.target.closest(".util-modal, .config-modal, .card-context-menu, .card__header")) return;
+
+    const boardBody = event.target.closest(".card__body--board");
+    if (boardBody) {
+      const boardCardElement = boardBody.closest(".card");
+      const clickedCardElement = event.target.closest(".card");
+      const board = state.cards.find((card) => card.id === boardCardElement?.dataset.cardId && card.type === "board");
+      if (board && clickedCardElement === boardCardElement) {
+        openCreateContextMenu(event, board.id);
+      }
+      return;
+    }
+
+    if (event.target.closest(".card")) return;
+
+    openCreateContextMenu(event);
+  }
+
   function handleContextMenuClick(event) {
     const button = event.target.closest("[data-action]");
-    const cardId = state.contextMenu?.cardId;
+    const menuState = state.contextMenu;
+    const cardId = menuState?.mode === "card" ? menuState.cardId : null;
     const card = cardId ? state.cards.find((item) => item.id === cardId) : null;
-    if (!button || !card || button.disabled) return;
+    if (!button || button.disabled) return;
 
     event.preventDefault();
     event.stopPropagation();
     const action = button.dataset.action;
     hideContextMenu(false);
+
+    if (action === "add-card") {
+      openCreateConfig(button.dataset.cardType, {
+        parentId: menuState?.parentId ?? null,
+        preferredPosition: menuState?.preferredPosition ?? null,
+      });
+      return;
+    }
+
+    if (action === "copy-image-path") {
+      copyText(menuState?.imagePath ?? "")
+        .then(() => showToast("Image path copied"))
+        .catch((error) => console.warn("Failed to copy image path.", error));
+      return;
+    }
+
+    if (!card) return;
 
     if (action === "edit") {
       if (card.isMutable) openEditConfig(card.id);
@@ -898,17 +995,19 @@
 
   function attachEventHandlers() {
     dashboard.addEventListener("pointerdown", startDashboardPan);
+    dashboard.addEventListener("contextmenu", showCreateContextMenu);
     dashboard.addEventListener("wheel", handleDashboardWheel, { passive: false });
     cardLayer.addEventListener("pointerdown", startCardInteraction);
     cardLayer.addEventListener("input", syncEditableTextCard);
     cardLayer.addEventListener("blur", syncEditableTextCard, true);
+    cardLayer.addEventListener("contextmenu", showImageContextMenu);
     cardLayer.addEventListener("contextmenu", showCardHeaderContextMenu);
     cardContextMenu.addEventListener("click", handleContextMenuClick);
     window.addEventListener("pointermove", moveInteraction);
     window.addEventListener("pointerup", endInteraction);
     window.addEventListener("pointercancel", endInteraction);
 
-    addCardButton.addEventListener("click", openCreateConfig);
+    addCardButton.addEventListener("click", () => openCreateConfig());
     closeConfigButton.addEventListener("click", closeConfig);
     cancelConfigButton.addEventListener("click", closeConfig);
     saveConfigButton.addEventListener("click", saveConfig);
@@ -935,6 +1034,7 @@
     urlInput.addEventListener("input", syncDraftFromInputs);
     localPathInput.addEventListener("input", syncDraftFromInputs);
     localLinkModeInput.addEventListener("input", syncDraftFromInputs);
+    imagePathInput.addEventListener("input", syncDraftFromInputs);
     secretInput.addEventListener("input", syncDraftFromInputs);
     widthInput.addEventListener("input", syncDraftFromInputs);
     heightInput.addEventListener("input", syncDraftFromInputs);

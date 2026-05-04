@@ -17,6 +17,8 @@
     heightInput,
     importContentInput,
     importModal,
+    imagePathField,
+    imagePathInput,
     localLinkModeField,
     localLinkModeInput,
     localPathField,
@@ -45,6 +47,8 @@
       "M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4v2H7c-.61 0-1.1.49-1.1 1.1S6.39 13.1 7 13.1h4v2H7c-1.71 0-3.1-1.39-3.1-3.1zm5.1 1h6v-2H9v2zm4-4.1h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4v-2h4c.61 0 1.1-.49 1.1-1.1s-.49-1.1-1.1-1.1h-4v-2z",
     typeLocalLink:
       "M4 4h11c1.1 0 2 .9 2 2v3h-2V6H4v12h11v-3h2v3c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zm13.59 5.59L20 12l-2.41 2.41-1.42-1.42.59-.59H9v-2h7.76l-.59-.59 1.42-1.42z",
+    typeImage:
+      "M5 3h14c1.1 0 2 .9 2 2v14c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2zm0 2v14h14V5H5zm2 11 3.5-4.5 2.5 3.01 1.75-2.26L18 16H7zm2-6.5A1.5 1.5 0 1 1 9 6a1.5 1.5 0 0 1 0 3.5z",
     typeSecret:
       "M12 2a5 5 0 0 0-5 5v3H6c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2h-1V7a5 5 0 0 0-5-5zm-3 8V7a3 3 0 0 1 6 0v3H9zm3 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z",
     typeText: "M4 5h16v2H4V5zm0 4h16v2H4V9zm0 4h10v2H4v-2zm0 4h16v2H4v-2z",
@@ -127,8 +131,20 @@
     if (type === "board") return ICON_PATHS.typeBoard;
     if (type === "link") return ICON_PATHS.typeLink;
     if (type === "local-link") return ICON_PATHS.typeLocalLink;
+    if (type === "image") return ICON_PATHS.typeImage;
     if (type === "secret") return ICON_PATHS.typeSecret;
     return ICON_PATHS.typeText;
+  }
+
+  function imageSourcePath(path) {
+    const source = (path ?? "").trim();
+    if (!source) return "";
+    if (/^[a-z][a-z0-9+.-]*:/i.test(source) || source.startsWith("/") || source.startsWith("./") || source.startsWith("../")) {
+      return source;
+    }
+    if (/^[a-z]:[\\/]/i.test(source)) return encodeURI(`file:///${source.replace(/\\/g, "/")}`);
+    if (source.startsWith("\\\\")) return encodeURI(`file:${source.replace(/\\/g, "/")}`);
+    return source;
   }
 
   function localLinkHref(card) {
@@ -259,6 +275,23 @@
         body.spellcheck = true;
       }
       body.textContent = card.content;
+    } else if (card.type === "image") {
+      body.className = "card__body card__body--image";
+      const imagePath = (card.imagePath ?? "").trim();
+      if (imagePath) {
+        const image = document.createElement("img");
+        image.className = "card__image";
+        image.src = imageSourcePath(imagePath);
+        image.alt = card.title || "Image";
+        image.dataset.cardId = card.id;
+        image.draggable = false;
+        body.append(image);
+      } else {
+        const placeholder = document.createElement("div");
+        placeholder.className = "card__image-placeholder";
+        placeholder.textContent = "No image path";
+        body.append(placeholder);
+      }
     }
 
     const resizeHandle = document.createElement("div");
@@ -350,6 +383,7 @@
     urlField.hidden = state.draft.type !== "link";
     localPathField.hidden = state.draft.type !== "local-link";
     localLinkModeField.hidden = state.draft.type !== "local-link";
+    imagePathField.hidden = state.draft.type !== "image";
     secretField.hidden = state.draft.type !== "secret";
     typeInput.value = state.draft.type;
     colorThemeInput.value = state.draft.colorTheme ?? "slate";
@@ -358,6 +392,7 @@
     urlInput.value = state.draft.url ?? "";
     localPathInput.value = state.draft.localPath ?? "";
     localLinkModeInput.value = state.draft.localLinkMode === "text" ? "text" : "app";
+    imagePathInput.value = state.draft.imagePath ?? "";
     secretInput.value = state.draft.secret ?? "";
     widthInput.value = state.draft.width;
     heightInput.value = state.draft.height;
@@ -385,16 +420,42 @@
     return button;
   }
 
+  function createAddCardContextMenuButton(type, label) {
+    const button = createContextMenuButton("add-card", label, cardTypeIconPath(type));
+    button.dataset.cardType = type;
+    return button;
+  }
+
   function renderCardContextMenu() {
     const menuState = state.contextMenu;
-    const card = menuState ? state.cards.find((item) => item.id === menuState.cardId) : null;
+    const isCreateMenu = menuState?.mode === "create";
+    const isImageMenu = menuState?.mode === "image";
+    const card = menuState?.mode === "card" ? state.cards.find((item) => item.id === menuState.cardId) : null;
 
-    cardContextMenu.classList.toggle("is-hidden", !card);
+    cardContextMenu.classList.toggle("is-hidden", !card && !isCreateMenu && !isImageMenu);
     cardContextMenu.replaceChildren();
-    if (!card || !menuState) return;
+    if ((!card && !isCreateMenu && !isImageMenu) || !menuState) return;
 
     cardContextMenu.style.left = `${menuState.x}px`;
     cardContextMenu.style.top = `${menuState.y}px`;
+
+    if (isCreateMenu) {
+      cardContextMenu.append(
+        createAddCardContextMenuButton("text", "Text"),
+        createAddCardContextMenuButton("board", "Board"),
+        createAddCardContextMenuButton("link", "Link"),
+        createAddCardContextMenuButton("local-link", "Link (Local)"),
+        createAddCardContextMenuButton("image", "Image"),
+        createAddCardContextMenuButton("secret", "Secret"),
+      );
+      return;
+    }
+
+    if (isImageMenu) {
+      cardContextMenu.append(createContextMenuButton("copy-image-path", "Copy path", ICON_PATHS.export));
+      return;
+    }
+
     cardContextMenu.append(
       createContextMenuButton("edit", "Edit", ICON_PATHS.edit, !card.isMutable),
       createContextMenuButton("remove", "Remove", ICON_PATHS.remove, !card.isMutable),
