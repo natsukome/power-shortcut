@@ -1,5 +1,5 @@
 (function initRender(app) {
-  const { CARD_LAYER_OFFSET, DASHBOARD_HEIGHT_UNITS, DASHBOARD_WIDTH_UNITS, GRID_SIZE } = app.constants;
+  const { CARD_LAYER_OFFSET, CARD_TYPES, CARD_TYPE_DEFS, DASHBOARD_HEIGHT_UNITS, DASHBOARD_WIDTH_UNITS, GRID_SIZE } = app.constants;
   const {
     cardConfigModal,
     cardContextMenu,
@@ -60,6 +60,19 @@
     gridHidden:
       "M3.28 2 22 20.72 20.72 22l-3-3H3V4.28l-1-1L3.28 2zM5 6.28V9h2.72L5 6.28zM5 11v4h4v-4H5zm0 6v2h4v-2H5zm6 0v2h4.72l-2-2H11zm0-2h.72l-.72-.72V15zm8-10h-2v4h2V5zm-4 0h-4v2.72l2 2H15V5zm4 6h-2v2.72l2 2V11z",
   };
+
+  function initializeTypeOptions() {
+    typeInput.replaceChildren(
+      ...CARD_TYPES.map((cardType) => {
+        const option = document.createElement("option");
+        option.value = cardType.id;
+        option.textContent = cardType.label;
+        return option;
+      }),
+    );
+  }
+
+  initializeTypeOptions();
 
   function clampPan() {
     const dashboardWidth = DASHBOARD_WIDTH_UNITS * GRID_SIZE * state.zoom;
@@ -126,7 +139,7 @@
   }
 
   function cardTypeLabel(card) {
-    if (card.type !== "local-link") return card.type;
+    if (card.type !== "local-link") return CARD_TYPE_DEFS[card.type]?.label ?? card.type;
     return `Link (${card.localLinkMode === "text" ? "Text" : "App"})`;
   }
 
@@ -161,8 +174,9 @@
     const isActiveCard =
       state.activeInteraction?.cardId === card.id &&
       (state.activeInteraction.type === "move" || state.activeInteraction.type === "resize");
+    const cardType = CARD_TYPE_DEFS[card.type] ?? CARD_TYPE_DEFS.text;
     const isBoardCollapsed = card.type === "board" && state.collapsedBoardCardIds.has(card.id);
-    const isWidthOnlyResize = card.type === "link" || card.type === "local-link" || card.type === "secret";
+    const isWidthOnlyResize = Boolean(cardType.widthOnlyResize);
     const canResize = card.isMutable;
 
     element.className = `card card--${card.type} card--theme-${card.colorTheme ?? "slate"}${card.isMutable ? "" : " card--immutable"}${
@@ -248,7 +262,7 @@
     removeButton.setAttribute("aria-label", "Remove");
     removeButton.append(createIcon(ICON_PATHS.remove));
 
-    const body = card.type === "link" || card.type === "local-link" || card.type === "secret" ? null : document.createElement("div");
+    const body = cardType.hasBody ? document.createElement("div") : null;
 
     if (card.type === "board") {
       body.className = "card__body card__body--board";
@@ -434,12 +448,13 @@
     saveConfigButton.textContent = state.configMode === "create" ? "Add" : "Save";
     typeField.hidden = state.configMode === "edit";
     colorThemeField.hidden = false;
-    contentField.hidden = state.draft.type !== "text";
-    urlField.hidden = state.draft.type !== "link";
-    localPathField.hidden = state.draft.type !== "local-link";
-    localLinkModeField.hidden = state.draft.type !== "local-link";
-    imagePathField.hidden = state.draft.type !== "image";
-    secretField.hidden = state.draft.type !== "secret";
+    const editableFields = new Set(CARD_TYPE_DEFS[state.draft.type]?.editableFields ?? []);
+    contentField.hidden = !editableFields.has("content");
+    urlField.hidden = !editableFields.has("url");
+    localPathField.hidden = !editableFields.has("localPath");
+    localLinkModeField.hidden = !editableFields.has("localLinkMode");
+    imagePathField.hidden = !editableFields.has("imagePath");
+    secretField.hidden = !editableFields.has("secret");
     typeInput.value = state.draft.type;
     colorThemeInput.value = state.draft.colorTheme ?? "slate";
     titleInput.value = state.draft.title;
@@ -495,14 +510,7 @@
     cardContextMenu.style.top = `${menuState.y}px`;
 
     if (isCreateMenu) {
-      cardContextMenu.append(
-        createAddCardContextMenuButton("text", "Text"),
-        createAddCardContextMenuButton("board", "Board"),
-        createAddCardContextMenuButton("link", "Link"),
-        createAddCardContextMenuButton("local-link", "Link (Local)"),
-        createAddCardContextMenuButton("image", "Image"),
-        createAddCardContextMenuButton("secret", "Secret"),
-      );
+      cardContextMenu.append(...CARD_TYPES.map((cardType) => createAddCardContextMenuButton(cardType.id, cardType.label)));
       return;
     }
 

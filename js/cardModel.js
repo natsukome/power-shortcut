@@ -26,6 +26,7 @@
     widthInput,
   } = app.dom;
   const { state } = app;
+  const { defaultColorTheme, normalizeCardData } = app.cardSchema;
 
   function selectedCard() {
     return state.cards.find((card) => card.id === state.selectedId) ?? null;
@@ -36,7 +37,7 @@
     return {
       type: "text",
       title: `Card ${index}`,
-      colorTheme: "blue",
+      colorTheme: defaultColorTheme("text"),
       content: "",
       url: "",
       localPath: "",
@@ -184,9 +185,11 @@
 
   app.cardModel = {
     clampDashboardCard,
+    defaultColorTheme,
     defaultDraft,
     descendantIds,
     findEmptyCardPosition,
+    normalizeCardData,
     normalizeDraft,
     removeCardTree,
     selectedCard,

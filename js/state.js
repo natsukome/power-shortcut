@@ -1,15 +1,10 @@
 (function initState(app) {
   const {
-    DEFAULT_CARD_HEIGHT_UNITS,
-    DEFAULT_CARD_WIDTH_UNITS,
-    MIN_CARD_HEIGHT_UNITS,
-    MIN_CARD_WIDTH_UNITS,
     STORAGE_KEY,
-    VALID_COLOR_THEMES,
-    VALID_CARD_TYPES,
     ZOOM_MAX,
     ZOOM_MIN,
   } = app.constants;
+  const { normalizeCardData } = app.cardSchema;
 
   const state = {
     cards: [],
@@ -37,41 +32,13 @@
     },
   };
 
-  function defaultColorTheme(type) {
-    if (type === "board" || type === "local-link") return "teal";
-    if (type === "link") return "violet";
-    if (type === "image") return "sky";
-    if (type === "secret") return "orange";
-    if (type === "text") return "blue";
-    return "slate";
-  }
-
   function applyStateData(storedState) {
     const cards = Array.isArray(storedState.cards) ? storedState.cards : [];
     const pan = storedState.pan ?? {};
 
     state.cards = cards
       .filter((card) => typeof card.id === "string")
-      .map((card) => ({
-        id: card.id,
-        parentId: typeof card.parentId === "string" ? card.parentId : null,
-        type: VALID_CARD_TYPES.has(card.type) ? card.type : "text",
-        title: typeof card.title === "string" ? card.title : "Untitled",
-        content: typeof card.content === "string" ? card.content : "",
-        url: typeof card.url === "string" ? card.url : "",
-        localPath: typeof card.localPath === "string" ? card.localPath : "",
-        localLinkMode: card.localLinkMode === "text" ? "text" : "app",
-        imagePath: typeof card.imagePath === "string" ? card.imagePath : "",
-        secret: typeof card.secret === "string" ? card.secret : "",
-        colorTheme: VALID_COLOR_THEMES.has(card.colorTheme)
-          ? card.colorTheme
-          : defaultColorTheme(VALID_CARD_TYPES.has(card.type) ? card.type : "text"),
-        isMutable: typeof card.isMutable === "boolean" ? card.isMutable : true,
-        x: Number.isFinite(Number(card.x)) ? Number(card.x) : 0,
-        y: Number.isFinite(Number(card.y)) ? Number(card.y) : 0,
-        width: Math.max(MIN_CARD_WIDTH_UNITS, Number(card.width) || DEFAULT_CARD_WIDTH_UNITS),
-        height: Math.max(MIN_CARD_HEIGHT_UNITS, Number(card.height) || DEFAULT_CARD_HEIGHT_UNITS),
-      }));
+      .map((card) => normalizeCardData(card));
 
     const restoredIds = new Set(state.cards.map((card) => card.id));
     state.cards = state.cards.map((card) => ({

@@ -1,4 +1,59 @@
 (function initConstants(app) {
+  const CARD_TYPES = [
+    {
+      id: "text",
+      label: "Text",
+      defaultColorTheme: "blue",
+      editableFields: ["content"],
+      searchableFields: [{ key: "content", label: "text content" }],
+      hasBody: true,
+    },
+    {
+      id: "board",
+      label: "Board",
+      defaultColorTheme: "teal",
+      editableFields: [],
+      searchableFields: [],
+      hasBody: true,
+    },
+    {
+      id: "link",
+      label: "Link",
+      defaultColorTheme: "violet",
+      editableFields: ["url"],
+      searchableFields: [{ key: "url", label: "link" }],
+      hasBody: false,
+      widthOnlyResize: true,
+    },
+    {
+      id: "local-link",
+      label: "Link (Local)",
+      defaultColorTheme: "teal",
+      editableFields: ["localPath", "localLinkMode"],
+      searchableFields: [{ key: "localPath", label: "local link" }],
+      hasBody: false,
+      widthOnlyResize: true,
+    },
+    {
+      id: "image",
+      label: "Image",
+      defaultColorTheme: "sky",
+      editableFields: ["imagePath"],
+      searchableFields: [],
+      hasBody: true,
+    },
+    {
+      id: "secret",
+      label: "Secret",
+      defaultColorTheme: "orange",
+      editableFields: ["secret"],
+      searchableFields: [],
+      hasBody: false,
+      widthOnlyResize: true,
+    },
+  ];
+  const CARD_TYPE_DEFS = Object.fromEntries(CARD_TYPES.map((type) => [type.id, type]));
+
   app.constants = {
     GRID_SIZE: 10,
     CARD_LAYER_OFFSET: 50000,
@@ -11,7 +66,9 @@
     PLACEMENT_GAP_UNITS: 1,
     PLACEMENT_SEARCH_RADIUS_UNITS: 240,
     STORAGE_KEY: "utilpage.dashboard.v1",
-    VALID_CARD_TYPES: new Set(["text", "board", "link", "local-link", "image", "secret"]),
+    CARD_TYPES,
+    CARD_TYPE_DEFS,
+    VALID_CARD_TYPES: new Set(CARD_TYPES.map((type) => type.id)),
     VALID_COLOR_THEMES: new Set([
       "slate",
       "zinc",

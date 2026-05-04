@@ -1,8 +1,6 @@
 (function initInteractions(app) {
   const {
     CARD_LAYER_OFFSET,
-    DEFAULT_CARD_HEIGHT_UNITS,
-    DEFAULT_CARD_WIDTH_UNITS,
     GRID_SIZE,
     MIN_CARD_HEIGHT_UNITS,
     MIN_CARD_WIDTH_UNITS,
@@ -46,6 +44,8 @@
     contentInput,
   } = app.dom;
   const { state } = app;
+  const { defaultColorTheme, normalizeCardData } = app.cardSchema;
+  const { copySecretCard, copyText } = app.clipboard;
   const { saveStoredState, importStateData } = app.storage;
   const { render, renderConfigModal, applyPan, clampPan } = app.rendering;
   const {
@@ -59,6 +59,7 @@
     snap,
     syncDraftFromInputs,
   } = app.cardModel;
+  const { searchCards } = app.searchModel;
   const PARTIAL_EXPORT_TYPE = "utilpage.partial-card.v1";
   const SEARCH_DEBOUNCE_MS = 500;
   let searchTimerId = null;
@@ -75,55 +76,6 @@
     window.open(url, "_blank", "noopener,noreferrer");
   }
 
-  function normalizeSearchText(text) {
-    return String(text ?? "")
-      .normalize("NFKD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, " ")
-      .trim();
-  }
-
-  function isSubsequence(needle, haystack) {
-    let index = 0;
-    for (const char of haystack) {
-      if (char === needle[index]) index += 1;
-      if (index === needle.length) return true;
-    }
-    return false;
-  }
-
-  function searchableCardFields(card) {
-    const fields = [{ label: "title", text: card.title }];
-    if (card.type === "text") fields.push({ label: "text content", text: card.content });
-    if (card.type === "link") fields.push({ label: "link", text: card.url });
-    if (card.type === "local-link") fields.push({ label: "local link", text: card.localPath });
-    return fields.filter((field) => field.text);
-  }
-
-  function searchTextScore(text, query) {
-    const normalizedQuery = normalizeSearchText(query);
-    const haystack = normalizeSearchText(text);
-    if (!normalizedQuery || !haystack) return 0;
-    if (haystack.includes(normalizedQuery)) return 100 + normalizedQuery.length;
-
-    const queryTokens = normalizedQuery.split(/\s+/).filter(Boolean);
-    const tokenHits = queryTokens.filter((token) => haystack.includes(token)).length;
-    if (tokenHits === queryTokens.length) return 80 + tokenHits;
-    if (queryTokens.length === 1 && normalizedQuery.length >= 3 && isSubsequence(normalizedQuery, haystack)) return 40;
-    return 0;
-  }
-
-  function searchScore(card, query) {
-    return Math.max(0, ...searchableCardFields(card).map((field) => searchTextScore(field.text, query)));
-  }
-
-  function searchFieldLabels(card, query) {
-    return searchableCardFields(card)
-      .filter((field) => searchTextScore(field.text, query) > 0)
-      .map((field) => field.label);
-  }
-
   function applyCardSearch() {
     const query = state.searchText.trim();
     if (query.length <= 1) {
@@ -133,10 +85,7 @@
       return;
     }
 
-    const results = state.cards
-      .map((card) => ({ card, fields: searchFieldLabels(card, query), score: searchScore(card, query) }))
-      .filter((result) => result.score > 0)
-      .sort((first, second) => second.score - first.score || first.card.title.localeCompare(second.card.title));
+    const results = searchCards(state.cards, query);
 
     state.searchResultIds = new Set(results.map((result) => result.card.id));
     state.searchResultFields = new Map(results.map((result) => [result.card.id, result.fields]));
@@ -162,6 +111,12 @@
     state.searchResultFields = new Map();
     render();
     cardSearchInput.focus();
+  }
+
+  function refreshCardSearchIfActive() {
+    if (state.searchText.trim().length > 1) {
+      applyCardSearch();
+    }
   }
 
   function cardElementFor(cardId) {
@@ -239,29 +194,6 @@
     element.style.top = `${offset + card.y * GRID_SIZE}px`;
     element.style.width = `${card.width * GRID_SIZE}px`;
     element.style.height = `${card.height * GRID_SIZE}px`;
-  }
-
-  async function copyText(text) {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(text);
-      return;
-    }
-
-    const textArea = document.createElement("textarea");
-    textArea.value = text;
-    textArea.setAttribute("readonly", "");
-    textArea.style.position = "fixed";
-    textArea.style.left = "-9999px";
-    document.body.append(textArea);
-    textArea.select();
-    document.execCommand("copy");
-    textArea.remove();
-  }
-
-  async function copySecretCard(card) {
-    const secret = card.secret ?? "";
-    if (!secret) return;
-    await copyText(secret);
   }
 
   function showToast(message) {
@@ -402,6 +334,7 @@
       state.cards.push(card);
       state.selectedId = card.id;
       saveStoredState();
+      refreshCardSearchIfActive();
     }
 
     if (state.configMode === "edit") {
@@ -410,6 +343,7 @@
       Object.assign(card, draft);
       clampDashboardCard(card);
       saveStoredState();
+      refreshCardSearchIfActive();
     }
 
     closeConfig();
@@ -425,6 +359,7 @@
     if (!result.removed) return;
 
     saveStoredState();
+    refreshCardSearchIfActive();
 
     if (state.configMode === "edit" && !result.removedIds.has(state.selectedId)) {
       closeConfig();
@@ -814,40 +749,8 @@
     }
   }
 
-  function importedNumber(value, fallback) {
-    return Number.isFinite(Number(value)) ? Number(value) : fallback;
-  }
-
-  function defaultColorTheme(type) {
-    if (type === "board" || type === "local-link") return "teal";
-    if (type === "link") return "violet";
-    if (type === "image") return "sky";
-    if (type === "secret") return "orange";
-    if (type === "text") return "blue";
-    return "slate";
-  }
-
   function normalizeImportedCard(card, id, parentId, position = null) {
-    const type = VALID_CARD_TYPES.has(card.type) ? card.type : "text";
-
-    return {
-      id,
-      parentId,
-      type,
-      title: typeof card.title === "string" && card.title.trim() ? card.title : "Untitled",
-      colorTheme: VALID_COLOR_THEMES.has(card.colorTheme) ? card.colorTheme : defaultColorTheme(type),
-      content: type === "text" && typeof card.content === "string" ? card.content : "",
-      url: type === "link" && typeof card.url === "string" ? card.url : "",
-      localPath: type === "local-link" && typeof card.localPath === "string" ? card.localPath : "",
-      localLinkMode: type === "local-link" && card.localLinkMode === "text" ? "text" : "app",
-      imagePath: type === "image" && typeof card.imagePath === "string" ? card.imagePath : "",
-      secret: type === "secret" && typeof card.secret === "string" ? card.secret : "",
-      isMutable: typeof card.isMutable === "boolean" ? card.isMutable : true,
-      x: position?.x ?? importedNumber(card.x, 0),
-      y: position?.y ?? importedNumber(card.y, 0),
-      width: Math.max(MIN_CARD_WIDTH_UNITS, importedNumber(card.width, DEFAULT_CARD_WIDTH_UNITS)),
-      height: Math.max(MIN_CARD_HEIGHT_UNITS, importedNumber(card.height, DEFAULT_CARD_HEIGHT_UNITS)),
-    };
+    return normalizeCardData(card, { id, parentId, position });
   }
 
   function importPartialData(data) {
@@ -902,6 +805,7 @@
         importStateData(data);
       }
       saveStoredState();
+      refreshCardSearchIfActive();
       if (closeModalOnSuccess) {
         state.importModalOpen = false;
         state.importContent = "";
@@ -1102,6 +1006,7 @@
       contentInput.value = card.content;
     }
     saveStoredState();
+    refreshCardSearchIfActive();
   }
 
   function isTypingTarget(target) {

@@ -61,14 +61,7 @@
       <section class="editor" aria-label="Selected card editor">
         <label>
           Type
-          <select id="typeInput">
-            <option value="text">Text</option>
-            <option value="board">Board</option>
-            <option value="link">Link</option>
-            <option value="local-link">Link (Local)</option>
-            <option value="image">Image</option>
-            <option value="secret">Secret</option>
-          </select>
+          <select id="typeInput"></select>
         </label>
         <label>
           Color theme
@@ -163,9 +156,12 @@
     </aside>
 
     <script src="js/constants.js"></script>
+    <script src="js/cardSchema.js"></script>
     <script src="js/dom.js"></script>
     <script src="js/state.js"></script>
     <script src="js/cardModel.js"></script>
+    <script src="js/searchModel.js"></script>
+    <script src="js/clipboard.js"></script>
     <script src="js/render.js"></script>
     <script src="js/interactions.js"></script>
     <script src="app.js"></script>
