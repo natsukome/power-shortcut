@@ -6,6 +6,8 @@
     cardCount,
     cardLayer,
     cardList,
+    cardSearchInput,
+    clearSearchButton,
     colorThemeField,
     colorThemeInput,
     configCardMeta,
@@ -79,6 +81,7 @@
     applyPan();
     renderGridVisibility();
     renderCards();
+    renderSearch();
     renderCardList();
     renderConfigModal();
     renderImportModal();
@@ -315,8 +318,37 @@
     dashboardToast.classList.toggle("is-hidden", !state.toastMessage);
   }
 
+  function renderSearch() {
+    if (cardSearchInput.value !== state.searchText) {
+      cardSearchInput.value = state.searchText;
+    }
+    clearSearchButton.classList.toggle("is-hidden", state.searchText.length <= 1);
+  }
+
+  function cardListSearchVisibleIds() {
+    if (!state.searchResultIds) return null;
+
+    const visibleIds = new Set(state.searchResultIds);
+    let didAddAncestor = true;
+
+    while (didAddAncestor) {
+      didAddAncestor = false;
+      state.cards.forEach((card) => {
+        if (!visibleIds.has(card.id) || !card.parentId || visibleIds.has(card.parentId)) return;
+        visibleIds.add(card.parentId);
+        didAddAncestor = true;
+      });
+    }
+
+    return visibleIds;
+  }
+
   function renderCardList() {
-    cardCount.textContent = `${state.cards.length} ${state.cards.length === 1 ? "card" : "cards"}`;
+    const visibleIds = cardListSearchVisibleIds();
+    const visibleCount = visibleIds ? state.searchResultIds.size : state.cards.length;
+    cardCount.textContent = visibleIds
+      ? `${visibleCount} ${visibleCount === 1 ? "match" : "matches"}`
+      : `${state.cards.length} ${state.cards.length === 1 ? "card" : "cards"}`;
 
     if (state.cards.length === 0) {
       const empty = document.createElement("div");
@@ -326,16 +358,26 @@
       return;
     }
 
+    if (visibleIds && state.searchResultIds.size === 0) {
+      const empty = document.createElement("div");
+      empty.className = "card-list__meta";
+      empty.textContent = "No matches.";
+      cardList.replaceChildren(empty);
+      return;
+    }
+
     cardList.replaceChildren(
-      ...state.cards.filter((card) => card.parentId === null).flatMap((card) => createCardListRows(card)),
+      ...state.cards
+        .filter((card) => card.parentId === null && (!visibleIds || visibleIds.has(card.id)))
+        .flatMap((card) => createCardListRows(card, 0, visibleIds)),
     );
   }
 
-  function createCardListRows(card, depth = 0) {
+  function createCardListRows(card, depth = 0, visibleIds = null) {
     const item = document.createElement("button");
-    const children = state.cards.filter((child) => child.parentId === card.id);
+    const children = state.cards.filter((child) => child.parentId === card.id && (!visibleIds || visibleIds.has(child.id)));
     const canCollapse = card.type === "board" && children.length > 0;
-    const isCollapsed = state.collapsedBoardIds.has(card.id);
+    const isCollapsed = !visibleIds && state.collapsedBoardIds.has(card.id);
 
     item.type = "button";
     item.className = `card-list__item${card.id === state.selectedId ? " is-selected" : ""}${
@@ -366,7 +408,7 @@
 
     header.append(meta);
     item.append(header);
-    return isCollapsed ? [item] : [item, ...children.flatMap((child) => createCardListRows(child, depth + 1))];
+    return isCollapsed ? [item] : [item, ...children.flatMap((child) => createCardListRows(child, depth + 1, visibleIds))];
   }
 
   function renderConfigModal() {

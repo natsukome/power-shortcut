@@ -20,6 +20,8 @@
     cardContextMenu,
     cardLayer,
     cardList,
+    cardSearchInput,
+    clearSearchButton,
     closeConfigButton,
     closeImportButton,
     colorThemeInput,
@@ -58,6 +60,8 @@
     syncDraftFromInputs,
   } = app.cardModel;
   const PARTIAL_EXPORT_TYPE = "utilpage.partial-card.v1";
+  const SEARCH_DEBOUNCE_MS = 500;
+  let searchTimerId = null;
 
   function normalizeUrl(url) {
     const trimmedUrl = url.trim();
@@ -69,6 +73,82 @@
     const url = normalizeUrl(card.url ?? "");
     if (!url) return;
     window.open(url, "_blank", "noopener,noreferrer");
+  }
+
+  function normalizeSearchText(text) {
+    return String(text ?? "")
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
+  }
+
+  function isSubsequence(needle, haystack) {
+    let index = 0;
+    for (const char of haystack) {
+      if (char === needle[index]) index += 1;
+      if (index === needle.length) return true;
+    }
+    return false;
+  }
+
+  function searchableCardText(card) {
+    const fields = [card.title];
+    if (card.type === "text") fields.push(card.content);
+    if (card.type === "link") fields.push(card.url);
+    if (card.type === "local-link") fields.push(card.localPath);
+    return fields.filter(Boolean).join(" ");
+  }
+
+  function searchScore(card, query) {
+    const normalizedQuery = normalizeSearchText(query);
+    const haystack = normalizeSearchText(searchableCardText(card));
+    if (!normalizedQuery || !haystack) return 0;
+    if (haystack.includes(normalizedQuery)) return 100 + normalizedQuery.length;
+
+    const queryTokens = normalizedQuery.split(/\s+/).filter(Boolean);
+    const tokenHits = queryTokens.filter((token) => haystack.includes(token)).length;
+    if (tokenHits === queryTokens.length) return 80 + tokenHits;
+    if (queryTokens.length === 1 && normalizedQuery.length >= 3 && isSubsequence(normalizedQuery, haystack)) return 40;
+    return 0;
+  }
+
+  function applyCardSearch() {
+    const query = state.searchText.trim();
+    if (query.length <= 1) {
+      state.searchResultIds = null;
+      render();
+      return;
+    }
+
+    state.searchResultIds = new Set(
+      state.cards
+        .map((card) => ({ card, score: searchScore(card, query) }))
+        .filter((result) => result.score > 0)
+        .sort((first, second) => second.score - first.score || first.card.title.localeCompare(second.card.title))
+        .map((result) => result.card.id),
+    );
+    render();
+  }
+
+  function scheduleCardSearch() {
+    window.clearTimeout(searchTimerId);
+    if (state.searchText.trim().length <= 1) {
+      state.searchResultIds = null;
+      render();
+      return;
+    }
+    render();
+    searchTimerId = window.setTimeout(applyCardSearch, SEARCH_DEBOUNCE_MS);
+  }
+
+  function clearCardSearch() {
+    window.clearTimeout(searchTimerId);
+    state.searchText = "";
+    state.searchResultIds = null;
+    render();
+    cardSearchInput.focus();
   }
 
   function cardElementFor(cardId) {
@@ -1082,6 +1162,11 @@
     importContentInput.addEventListener("input", () => {
       state.importContent = importContentInput.value;
     });
+    cardSearchInput.addEventListener("input", () => {
+      state.searchText = cardSearchInput.value;
+      scheduleCardSearch();
+    });
+    clearSearchButton.addEventListener("click", clearCardSearch);
 
     typeInput.addEventListener("input", () => {
       syncDraftFromInputs();

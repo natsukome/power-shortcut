@@ -18,6 +18,8 @@
     cardConfigModal: document.querySelector("#cardConfigModal"),
     importModal: document.querySelector("#importModal"),
     addCardButton: document.querySelector("#addCardButton"),
+    cardSearchInput: document.querySelector("#cardSearchInput"),
+    clearSearchButton: document.querySelector("#clearSearchButton"),
     closeConfigButton: document.querySelector("#closeConfigButton"),
     cancelConfigButton: document.querySelector("#cancelConfigButton"),
     saveConfigButton: document.querySelector("#saveConfigButton"),

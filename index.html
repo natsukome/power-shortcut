@@ -29,6 +29,13 @@
         <button id="addCardButton" class="button button--primary" type="button">Add card</button>
       </header>
 
+      <section class="search-section" aria-label="Search cards">
+        <label class="search-field">
+          <input id="cardSearchInput" type="text" autocomplete="off" placeholder="Search cards" />
+          <button id="clearSearchButton" class="search-field__clear" type="button" aria-label="Clear search">x</button>
+        </label>
+      </section>
+
       <section class="card-list-section" aria-label="Card list">
         <h2>Cards</h2>
         <div id="cardList" class="card-list"></div>

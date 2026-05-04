@@ -17,6 +17,8 @@
     collapsedBoardIds: new Set(),
     collapsedBoardCardIds: new Set(),
     toastMessage: "",
+    searchText: "",
+    searchResultIds: null,
     configMode: null,
     draft: null,
     createTarget: null,
