@@ -75,6 +75,65 @@
     return [...cardLayer.querySelectorAll(".card")].find((element) => element.dataset.cardId === cardId) ?? null;
   }
 
+  function cardAncestors(card) {
+    const ancestors = [];
+    let parentId = card?.parentId ?? null;
+
+    while (parentId) {
+      const parent = state.cards.find((item) => item.id === parentId);
+      if (!parent) break;
+      ancestors.unshift(parent);
+      parentId = parent.parentId;
+    }
+
+    return ancestors;
+  }
+
+  function revealCardInView(cardId) {
+    const card = state.cards.find((item) => item.id === cardId);
+    if (!card) return;
+
+    let didExpandAncestor = false;
+    cardAncestors(card).forEach((ancestor) => {
+      if (ancestor.type !== "board" || !state.collapsedBoardCardIds.has(ancestor.id)) return;
+      state.collapsedBoardCardIds.delete(ancestor.id);
+      didExpandAncestor = true;
+    });
+
+    render();
+
+    const element = cardElementFor(card.id);
+    const rect = element?.getBoundingClientRect();
+    if (!rect) return;
+
+    const margin = 24;
+    let deltaX = 0;
+    let deltaY = 0;
+
+    if (rect.left < margin) {
+      deltaX = margin - rect.left;
+    } else if (rect.right > window.innerWidth - margin) {
+      deltaX = window.innerWidth - margin - rect.right;
+    }
+
+    if (rect.top < margin) {
+      deltaY = margin - rect.top;
+    } else if (rect.bottom > window.innerHeight - margin) {
+      deltaY = window.innerHeight - margin - rect.bottom;
+    }
+
+    if (deltaX === 0 && deltaY === 0) {
+      if (didExpandAncestor) saveStoredState();
+      return;
+    }
+
+    state.pan.x += deltaX;
+    state.pan.y += deltaY;
+    clampPan();
+    saveStoredState();
+    render();
+  }
+
   function updateCardElementFrame(card) {
     const element = cardElementFor(card.id);
     if (!element) {
@@ -1050,7 +1109,7 @@
 
       state.selectedId = item.dataset.cardId;
       saveStoredState();
-      render();
+      revealCardInView(item.dataset.cardId);
     });
     cardList.addEventListener("contextmenu", showCardListContextMenu);
 
