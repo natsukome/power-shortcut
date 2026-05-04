@@ -76,12 +76,12 @@
     window.open(url, "_blank", "noopener,noreferrer");
   }
 
-  function applyCardSearch() {
+  function applyCardSearch({ shouldRender = true } = {}) {
     const query = state.searchText.trim();
     if (query.length <= 1) {
       state.searchResultIds = null;
       state.searchResultFields = new Map();
-      render();
+      if (shouldRender) render();
       return;
     }
 
@@ -89,7 +89,7 @@
 
     state.searchResultIds = new Set(results.map((result) => result.card.id));
     state.searchResultFields = new Map(results.map((result) => [result.card.id, result.fields]));
-    render();
+    if (shouldRender) render();
   }
 
   function scheduleCardSearch() {
@@ -113,9 +113,9 @@
     cardSearchInput.focus();
   }
 
-  function refreshCardSearchIfActive() {
+  function refreshCardSearchIfActive({ shouldRender = false } = {}) {
     if (state.searchText.trim().length > 1) {
-      applyCardSearch();
+      applyCardSearch({ shouldRender });
     }
   }
 
@@ -196,9 +196,9 @@
     element.style.height = `${card.height * GRID_SIZE}px`;
   }
 
-  function showToast(message) {
+  function showToast(message, { shouldRender = true } = {}) {
     state.toastMessage = message;
-    render();
+    if (shouldRender) render();
 
     window.setTimeout(() => {
       if (state.toastMessage !== message) return;
@@ -211,8 +211,8 @@
     return Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoom));
   }
 
-  function showZoomToast() {
-    showToast(`Zoom ${Math.round(state.zoom * 100)}%`);
+  function showZoomToast(options) {
+    showToast(`Zoom ${Math.round(state.zoom * 100)}%`, options);
   }
 
   function toggleGridVisibility() {
@@ -236,8 +236,8 @@
     state.pan.y = anchorClientY - anchorBoardY * zoom;
     clampPan();
     saveStoredState();
+    showZoomToast({ shouldRender: false });
     render();
-    showZoomToast();
   }
 
   function openCreateConfig(type = "text", target = null) {
@@ -810,8 +810,8 @@
         state.importModalOpen = false;
         state.importContent = "";
       }
+      showToast(data?.type === PARTIAL_EXPORT_TYPE ? "Imported card" : "Imported dashboard", { shouldRender: false });
       render();
-      showToast(data?.type === PARTIAL_EXPORT_TYPE ? "Imported card" : "Imported dashboard");
       return true;
     } catch {
       showToast("Import failed: invalid data");
@@ -1006,7 +1006,7 @@
       contentInput.value = card.content;
     }
     saveStoredState();
-    refreshCardSearchIfActive();
+    refreshCardSearchIfActive({ shouldRender: event.type === "blur" });
   }
 
   function isTypingTarget(target) {
