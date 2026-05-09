@@ -140,18 +140,58 @@
     return ancestors;
   }
 
+  function panBoardToCard(board, card) {
+    const boardBody = boardBodyFor(board.id);
+    const rect = boardBody?.getBoundingClientRect();
+    if (!rect) return false;
+
+    const marginUnits = 2;
+    const viewportWidthUnits = rect.width / (GRID_SIZE * state.zoom);
+    const viewportHeightUnits = rect.height / (GRID_SIZE * state.zoom);
+    const previousPanX = board.boardPanX ?? 0;
+    const previousPanY = board.boardPanY ?? 0;
+    let nextPanX = previousPanX;
+    let nextPanY = previousPanY;
+
+    if (card.x < nextPanX + marginUnits) {
+      nextPanX = card.x - marginUnits;
+    } else if (card.x + card.width > nextPanX + viewportWidthUnits - marginUnits) {
+      nextPanX = card.x + card.width - viewportWidthUnits + marginUnits;
+    }
+
+    if (card.y < nextPanY + marginUnits) {
+      nextPanY = card.y - marginUnits;
+    } else if (card.y + card.height > nextPanY + viewportHeightUnits - marginUnits) {
+      nextPanY = card.y + card.height - viewportHeightUnits + marginUnits;
+    }
+
+    board.boardPanX = nextPanX;
+    board.boardPanY = nextPanY;
+    clampBoardPan(board, boardBody);
+    return board.boardPanX !== previousPanX || board.boardPanY !== previousPanY;
+  }
+
   function revealCardInView(cardId) {
     const card = state.cards.find((item) => item.id === cardId);
     if (!card) return;
 
     let didExpandAncestor = false;
-    cardAncestors(card).forEach((ancestor) => {
+    const ancestors = cardAncestors(card);
+    ancestors.forEach((ancestor) => {
       if (ancestor.type !== "board" || !state.collapsedBoardCardIds.has(ancestor.id)) return;
       state.collapsedBoardCardIds.delete(ancestor.id);
       didExpandAncestor = true;
     });
 
     render();
+
+    let didPanBoard = false;
+    ancestors.forEach((ancestor, index) => {
+      const child = ancestors[index + 1] ?? card;
+      didPanBoard = panBoardToCard(ancestor, child) || didPanBoard;
+    });
+
+    if (didPanBoard) render();
 
     const element = cardElementFor(card.id);
     const rect = element?.getBoundingClientRect();
@@ -174,7 +214,7 @@
     }
 
     if (deltaX === 0 && deltaY === 0) {
-      if (didExpandAncestor) saveStoredState();
+      if (didExpandAncestor || didPanBoard) saveStoredState();
       return;
     }
 
