@@ -497,21 +497,14 @@
       .at(-1)?.board;
   }
 
-  function transferCardToBoard(card, board, event) {
+  function transferCardToBoard(card, board, event, interaction) {
     if (!board || card.parentId === board.id) return;
 
     const dropPoint = pointerToBoardUnits(event, board.id);
-    const preferredPosition = {
-      x: Math.max(0, dropPoint.x - Math.round(card.width / 2)),
-      y: Math.max(0, dropPoint.y - Math.round(card.height / 2)),
-    };
-    const excludedIds = descendantIds(card.id);
-    excludedIds.add(card.id);
-    const position = findEmptyCardPosition(card.width, card.height, board.id, preferredPosition, excludedIds);
 
     card.parentId = board.id;
-    card.x = Math.max(0, position.x);
-    card.y = Math.max(0, position.y);
+    card.x = dropPoint.x - (interaction?.grabOffsetX ?? Math.round(card.width / 2));
+    card.y = dropPoint.y - (interaction?.grabOffsetY ?? Math.round(card.height / 2));
     clampBoardChildCard(card);
   }
 
@@ -523,19 +516,12 @@
     return Boolean(rect && event.clientX < rect.left);
   }
 
-  function transferCardToDashboard(card, event) {
+  function transferCardToDashboard(card, event, interaction) {
     const dashboardPoint = pointerToBoardUnits(event);
-    const preferredPosition = {
-      x: dashboardPoint.x - Math.round(card.width / 2),
-      y: dashboardPoint.y - Math.round(card.height / 2),
-    };
-    const excludedIds = descendantIds(card.id);
-    excludedIds.add(card.id);
-    const position = findEmptyCardPosition(card.width, card.height, null, preferredPosition, excludedIds);
 
     card.parentId = null;
-    card.x = position.x;
-    card.y = position.y;
+    card.x = dashboardPoint.x - (interaction?.grabOffsetX ?? Math.round(card.width / 2));
+    card.y = dashboardPoint.y - (interaction?.grabOffsetY ?? Math.round(card.height / 2));
     clampDashboardCard(card);
   }
 
@@ -697,6 +683,8 @@
       startClientX: event.clientX,
       startClientY: event.clientY,
       startedOnSecretTitle: Boolean(event.target.closest(".card--secret .card__title")),
+      grabOffsetX: boardPoint.x - card.x,
+      grabOffsetY: boardPoint.y - card.y,
       startX: card.x,
       startY: card.y,
       startWidth: card.width,
@@ -816,10 +804,10 @@
       }
 
       if (card && isDroppedPastParentBoardLeftEdge(card, event)) {
-        transferCardToDashboard(card, event);
+        transferCardToDashboard(card, event, interaction);
       } else {
         const board = card ? boardAtPoint(event, card.id) : null;
-        if (card && board) transferCardToBoard(card, board, event);
+        if (card && board) transferCardToBoard(card, board, event, interaction);
       }
     }
 
