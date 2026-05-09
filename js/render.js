@@ -34,6 +34,9 @@
     localLinkModeInput,
     localPathField,
     localPathInput,
+    miniMap,
+    miniMapSurface,
+    miniMapToggleButton,
     saveConfigButton,
     secretField,
     secretInput,
@@ -68,6 +71,27 @@
     gridVisible: "M3 3h18v18H3V3zm2 2v4h4V5H5zm6 0v4h4V5h-4zm6 0v4h2V5h-2zM5 11v4h4v-4H5zm6 0v4h4v-4h-4zm6 0v4h2v-4h-2zM5 17v2h4v-2H5zm6 0v2h4v-2h-4zm6 0v2h2v-2h-2z",
     gridHidden:
       "M3.28 2 22 20.72 20.72 22l-3-3H3V4.28l-1-1L3.28 2zM5 6.28V9h2.72L5 6.28zM5 11v4h4v-4H5zm0 6v2h4v-2H5zm6 0v2h4.72l-2-2H11zm0-2h.72l-.72-.72V15zm8-10h-2v4h2V5zm-4 0h-4v2.72l2 2H15V5zm4 6h-2v2.72l2 2V11z",
+    miniMap: "M3 4h18v16H3V4zm2 2v12h14V6H5zm2 2h4v3H7V8zm6 1h4v5h-4V9zm-6 4h5v3H7v-3z",
+    miniMapHidden:
+      "M3.28 2 22 20.72 20.72 22l-3-3H3V4.28l-1-1L3.28 2zM5 6.28V9h2.72L5 6.28zM5 11v5h5.72l-5-5H5zm14 6.72V6H7.28l-2-2H21v15.72l-2-2zM13 8h4v4.72L13 8.72V8z",
+  };
+  const THEME_ACCENTS = {
+    slate: "#64748b",
+    zinc: "#52525b",
+    red: "#dc2626",
+    orange: "#c2410c",
+    amber: "#b45309",
+    yellow: "#a16207",
+    lime: "#4d7c0f",
+    green: "#15803d",
+    teal: "#0f766e",
+    cyan: "#0e7490",
+    sky: "#0369a1",
+    blue: "#2563eb",
+    indigo: "#4f46e5",
+    violet: "#7c3aed",
+    fuchsia: "#c026d3",
+    rose: "#e11d48",
   };
 
   function initializeTypeOptions() {
@@ -108,6 +132,7 @@
     renderConfigModal();
     renderImportModal();
     renderCardContextMenu();
+    renderMiniMap();
     renderToast();
   }
 
@@ -116,6 +141,59 @@
     gridToggleButton.title = state.showGrid ? "Hide grid lines" : "Show grid lines";
     gridToggleButton.setAttribute("aria-label", state.showGrid ? "Hide grid lines" : "Show grid lines");
     gridToggleButton.replaceChildren(createIcon(state.showGrid ? ICON_PATHS.gridVisible : ICON_PATHS.gridHidden, "zoom-button__icon"));
+  }
+
+  function focusedBoardForMiniMap() {
+    let card = state.cards.find((item) => item.id === state.selectedId) ?? null;
+    if (card?.type === "board") return card;
+
+    while (card?.parentId) {
+      const parent = state.cards.find((item) => item.id === card.parentId);
+      if (!parent) return null;
+      if (parent.type === "board") return parent;
+      card = parent;
+    }
+
+    return null;
+  }
+
+  function renderMiniMap() {
+    miniMap.classList.toggle("is-hidden", !state.showMiniMap);
+    miniMapToggleButton.title = state.showMiniMap ? "Hide mini map" : "Show mini map";
+    miniMapToggleButton.setAttribute("aria-label", state.showMiniMap ? "Hide mini map" : "Show mini map");
+    miniMapToggleButton.replaceChildren(createIcon(state.showMiniMap ? ICON_PATHS.miniMap : ICON_PATHS.miniMapHidden, "zoom-button__icon"));
+
+    if (!state.showMiniMap) {
+      miniMapSurface.replaceChildren();
+      return;
+    }
+
+    const focusedBoard = focusedBoardForMiniMap();
+    const widthUnits = focusedBoard ? BOARD_CONTENT_WIDTH_UNITS : DASHBOARD_WIDTH_UNITS;
+    const heightUnits = focusedBoard ? BOARD_CONTENT_HEIGHT_UNITS : DASHBOARD_HEIGHT_UNITS;
+    const cards = state.cards.filter((card) => card.parentId === (focusedBoard?.id ?? null));
+    const maxWidth = 220;
+    const maxHeight = 120;
+    const scale = Math.min(maxWidth / widthUnits, maxHeight / heightUnits);
+
+    miniMap.dataset.scope = focusedBoard ? "board" : "dashboard";
+    miniMapSurface.style.width = `${Math.round(widthUnits * scale)}px`;
+    miniMapSurface.style.height = `${Math.round(heightUnits * scale)}px`;
+    miniMapSurface.replaceChildren(...cards.map((card) => createMiniMapFrame(card, widthUnits, heightUnits)));
+  }
+
+  function createMiniMapFrame(card, widthUnits, heightUnits) {
+    const frame = document.createElement("div");
+    const accent = THEME_ACCENTS[card.colorTheme] ?? THEME_ACCENTS.slate;
+
+    frame.className = `mini-map__frame${card.id === state.selectedId ? " is-focused" : ""}`;
+    frame.style.left = `${(card.x / widthUnits) * 100}%`;
+    frame.style.top = `${(card.y / heightUnits) * 100}%`;
+    frame.style.width = `${(card.width / widthUnits) * 100}%`;
+    frame.style.height = `${(card.height / heightUnits) * 100}%`;
+    frame.style.borderColor = accent;
+    frame.style.backgroundColor = `${accent}26`;
+    return frame;
   }
 
   function renderCards() {

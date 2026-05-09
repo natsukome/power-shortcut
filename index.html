@@ -13,10 +13,14 @@
       </div>
     </main>
     <div class="zoom-controls" aria-label="Zoom controls">
+      <button id="miniMapToggleButton" class="zoom-button" type="button" aria-label="Hide mini map"></button>
       <button id="gridToggleButton" class="zoom-button" type="button" aria-label="Hide grid lines"></button>
       <button id="zoomOutButton" class="zoom-button" type="button" aria-label="Zoom out">-</button>
       <button id="zoomInButton" class="zoom-button" type="button" aria-label="Zoom in">+</button>
     </div>
+    <aside id="miniMap" class="mini-map" aria-label="Mini map">
+      <div id="miniMapSurface" class="mini-map__surface"></div>
+    </aside>
     <div id="dashboardToast" class="dashboard-toast is-hidden" role="status" aria-live="polite"></div>
     <nav id="cardContextMenu" class="card-context-menu is-hidden" aria-label="Card actions"></nav>
 

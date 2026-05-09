@@ -848,6 +848,54 @@ textarea {
   pointer-events: none;
 }
 
+.mini-map {
+  position: fixed;
+  left: 20px;
+  bottom: 20px;
+  z-index: 11;
+  display: grid;
+  place-items: center;
+  padding: 8px;
+  border: 1px solid var(--panel-border);
+  border-radius: 7px;
+  background: var(--panel-bg);
+  box-shadow: 0 10px 24px rgba(27, 42, 65, 0.14);
+  transition:
+    opacity 120ms ease,
+    visibility 120ms ease;
+}
+
+.mini-map.is-hidden,
+.mini-map.is-hover-hidden {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mini-map__surface {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(28, 39, 57, 0.18);
+  border-radius: 4px;
+  background:
+    linear-gradient(rgba(28, 39, 57, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(28, 39, 57, 0.08) 1px, transparent 1px),
+    rgba(255, 255, 255, 0.78);
+  background-size: 10px 10px;
+}
+
+.mini-map__frame {
+  position: absolute;
+  min-width: 3px;
+  min-height: 3px;
+  border: 2px solid currentColor;
+  border-radius: 2px;
+}
+
+.mini-map__frame.is-focused {
+  box-shadow: 0 0 0 2px rgba(23, 32, 51, 0.22);
+}
+
 .util-modal {
   top: 20px;
   right: 20px;

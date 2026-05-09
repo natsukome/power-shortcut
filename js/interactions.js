@@ -35,6 +35,8 @@
     importButton,
     localLinkModeInput,
     localPathInput,
+    miniMap,
+    miniMapToggleButton,
     saveConfigButton,
     secretInput,
     titleInput,
@@ -66,6 +68,7 @@
   const PARTIAL_EXPORT_TYPE = "utilpage.partial-card.v1";
   const SEARCH_DEBOUNCE_MS = 500;
   let searchTimerId = null;
+  let miniMapHoverRect = null;
 
   function normalizeUrl(url) {
     const trimmedUrl = url.trim();
@@ -262,6 +265,35 @@
     state.showGrid = !state.showGrid;
     saveStoredState();
     render();
+  }
+
+  function toggleMiniMapVisibility() {
+    state.showMiniMap = !state.showMiniMap;
+    miniMap.classList.remove("is-hover-hidden");
+    miniMapHoverRect = null;
+    saveStoredState();
+    render();
+  }
+
+  function hideMiniMapWhileHovered() {
+    if (!state.showMiniMap) return;
+    miniMapHoverRect = miniMap.getBoundingClientRect();
+    miniMap.classList.add("is-hover-hidden");
+  }
+
+  function restoreMiniMapAfterHover(event) {
+    if (!miniMapHoverRect || !miniMap.classList.contains("is-hover-hidden")) return;
+
+    const margin = 1;
+    const isOutside =
+      event.clientX < miniMapHoverRect.left - margin ||
+      event.clientX > miniMapHoverRect.right + margin ||
+      event.clientY < miniMapHoverRect.top - margin ||
+      event.clientY > miniMapHoverRect.bottom + margin;
+
+    if (!isOutside) return;
+    miniMapHoverRect = null;
+    miniMap.classList.remove("is-hover-hidden");
   }
 
   function setZoom(nextZoom, anchorClientX = window.innerWidth / 2, anchorClientY = window.innerHeight / 2) {
@@ -942,6 +974,7 @@
       pan: state.pan,
       zoom: state.zoom,
       showGrid: state.showGrid,
+      showMiniMap: state.showMiniMap,
     });
 
     try {
@@ -1175,6 +1208,7 @@
     cardLayer.addEventListener("contextmenu", showCardHeaderContextMenu);
     cardContextMenu.addEventListener("click", handleContextMenuClick);
     window.addEventListener("pointermove", moveInteraction);
+    window.addEventListener("pointermove", restoreMiniMapAfterHover);
     window.addEventListener("pointerup", endInteraction);
     window.addEventListener("pointercancel", endInteraction);
 
@@ -1184,6 +1218,8 @@
     saveConfigButton.addEventListener("click", saveConfig);
     cardConfigModal.addEventListener("keydown", handleConfigKeyDown);
     gridToggleButton.addEventListener("click", toggleGridVisibility);
+    miniMapToggleButton.addEventListener("click", toggleMiniMapVisibility);
+    miniMap.addEventListener("mouseenter", hideMiniMapWhileHovered);
     zoomInButton.addEventListener("click", () => setZoom(state.zoom + ZOOM_STEP));
     zoomOutButton.addEventListener("click", () => setZoom(state.zoom - ZOOM_STEP));
     exportButton.addEventListener("click", exportDashboard);

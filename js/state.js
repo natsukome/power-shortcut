@@ -28,6 +28,7 @@
     exitHintBoardId: null,
     zoom: 1,
     showGrid: true,
+    showMiniMap: true,
     pan: {
       x: window.innerWidth / 2,
       y: window.innerHeight / 2,
@@ -73,6 +74,7 @@
       ? Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Number(storedState.zoom)))
       : state.zoom;
     state.showGrid = typeof storedState.showGrid === "boolean" ? storedState.showGrid : true;
+    state.showMiniMap = typeof storedState.showMiniMap === "boolean" ? storedState.showMiniMap : true;
     state.collapsedBoardIds = new Set(
       Array.isArray(storedState.collapsedBoardIds)
         ? storedState.collapsedBoardIds.filter((id) => restoredIds.has(id))
@@ -111,6 +113,7 @@
         pan: state.pan,
         zoom: state.zoom,
         showGrid: state.showGrid,
+        showMiniMap: state.showMiniMap,
       }),
     );
   }
