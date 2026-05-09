@@ -1136,7 +1136,36 @@
   }
 
   function editablePlainText(element) {
-    return element.innerText.replace(/\r\n/g, "\n").replace(/\n$/, "");
+    let text = "";
+
+    function append(value) {
+      text += value.replace(/\r\n?/g, "\n");
+    }
+
+    function appendNewline() {
+      if (!text.endsWith("\n")) text += "\n";
+    }
+
+    function readNode(node, isRoot = false) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        append(node.nodeValue ?? "");
+        return;
+      }
+
+      if (node.nodeType !== Node.ELEMENT_NODE) return;
+      if (node.tagName === "BR") {
+        text += "\n";
+        return;
+      }
+
+      const isLineBlock = !isRoot && (node.tagName === "DIV" || node.tagName === "P");
+      if (isLineBlock && text && !text.endsWith("\n")) text += "\n";
+      node.childNodes.forEach((child) => readNode(child));
+      if (isLineBlock) appendNewline();
+    }
+
+    readNode(element, true);
+    return text.replace(/\n$/, "");
   }
 
   function syncEditableTextCard(event) {
