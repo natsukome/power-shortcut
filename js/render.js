@@ -179,7 +179,10 @@
     miniMap.dataset.scope = focusedBoard ? "board" : "dashboard";
     miniMapSurface.style.width = `${Math.round(widthUnits * scale)}px`;
     miniMapSurface.style.height = `${Math.round(heightUnits * scale)}px`;
-    miniMapSurface.replaceChildren(...cards.map((card) => createMiniMapFrame(card, widthUnits, heightUnits)));
+    miniMapSurface.replaceChildren(
+      ...cards.map((card) => createMiniMapFrame(card, widthUnits, heightUnits)),
+      createMiniMapViewport(focusedBoard, widthUnits, heightUnits),
+    );
   }
 
   function createMiniMapFrame(card, widthUnits, heightUnits) {
@@ -194,6 +197,39 @@
     frame.style.borderColor = accent;
     frame.style.backgroundColor = `${accent}26`;
     return frame;
+  }
+
+  function createMiniMapViewport(focusedBoard, widthUnits, heightUnits) {
+    const frame = document.createElement("div");
+    const viewport = focusedBoard ? boardMiniMapViewport(focusedBoard) : dashboardMiniMapViewport();
+
+    frame.className = "mini-map__viewport";
+    frame.style.left = `${(viewport.x / widthUnits) * 100}%`;
+    frame.style.top = `${(viewport.y / heightUnits) * 100}%`;
+    frame.style.width = `${(viewport.width / widthUnits) * 100}%`;
+    frame.style.height = `${(viewport.height / heightUnits) * 100}%`;
+    return frame;
+  }
+
+  function dashboardMiniMapViewport() {
+    return {
+      x: Math.max(0, Math.min(DASHBOARD_WIDTH_UNITS, (0 - state.pan.x) / (GRID_SIZE * state.zoom))),
+      y: Math.max(0, Math.min(DASHBOARD_HEIGHT_UNITS, (0 - state.pan.y) / (GRID_SIZE * state.zoom))),
+      width: Math.min(DASHBOARD_WIDTH_UNITS, window.innerWidth / (GRID_SIZE * state.zoom)),
+      height: Math.min(DASHBOARD_HEIGHT_UNITS, window.innerHeight / (GRID_SIZE * state.zoom)),
+    };
+  }
+
+  function boardMiniMapViewport(board) {
+    const boardBody = document.querySelector(`.board-layer[data-board-id="${CSS.escape(board.id)}"]`)?.closest(".card__body--board");
+    const rect = boardBody?.getBoundingClientRect();
+
+    return {
+      x: board.boardPanX ?? 0,
+      y: board.boardPanY ?? 0,
+      width: rect ? Math.min(BOARD_CONTENT_WIDTH_UNITS, rect.width / (GRID_SIZE * state.zoom)) : BOARD_CONTENT_WIDTH_UNITS,
+      height: rect ? Math.min(BOARD_CONTENT_HEIGHT_UNITS, rect.height / (GRID_SIZE * state.zoom)) : BOARD_CONTENT_HEIGHT_UNITS,
+    };
   }
 
   function renderCards() {

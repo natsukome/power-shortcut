@@ -896,6 +896,19 @@ textarea {
   box-shadow: 0 0 0 2px rgba(23, 32, 51, 0.22);
 }
 
+.mini-map__viewport {
+  position: absolute;
+  min-width: 5px;
+  min-height: 5px;
+  border: 2px solid #172033;
+  border-radius: 3px;
+  background: rgba(23, 32, 51, 0.08);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.9),
+    0 0 0 3px rgba(23, 32, 51, 0.14);
+  pointer-events: none;
+}
+
 .util-modal {
   top: 20px;
   right: 20px;
