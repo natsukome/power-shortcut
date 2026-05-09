@@ -330,6 +330,7 @@ textarea {
 }
 
 .card.is-selected {
+  z-index: 100;
   border-color: var(--card-accent);
   box-shadow:
     0 0 0 2px var(--card-selected-ring),
