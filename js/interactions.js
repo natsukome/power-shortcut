@@ -1,5 +1,7 @@
 (function initInteractions(app) {
   const {
+    BOARD_CONTENT_HEIGHT_UNITS,
+    BOARD_CONTENT_WIDTH_UNITS,
     CARD_LAYER_OFFSET,
     GRID_SIZE,
     MIN_CARD_HEIGHT_UNITS,
@@ -50,6 +52,7 @@
   const { render, renderConfigModal, applyPan, clampPan } = app.rendering;
   const {
     clampDashboardCard,
+    clampBoardChildCard,
     defaultDraft,
     descendantIds,
     findEmptyCardPosition,
@@ -331,6 +334,7 @@
         y: parentId ? Math.max(0, position.y) : position.y,
       };
       if (parentId === null) clampDashboardCard(card);
+      if (parentId !== null) clampBoardChildCard(card);
       state.cards.push(card);
       state.selectedId = card.id;
       saveStoredState();
@@ -341,7 +345,12 @@
       const card = selectedCard();
       if (!card) return;
       Object.assign(card, draft);
-      clampDashboardCard(card);
+      if (card.parentId) {
+        clampBoardChildCard(card);
+      } else {
+        clampDashboardCard(card);
+      }
+      if (card.type === "board") clampBoardPan(card);
       saveStoredState();
       refreshCardSearchIfActive();
     }
@@ -379,6 +388,34 @@
     return [...document.querySelectorAll(".board-layer")].find((layer) => layer.dataset.boardId === boardId) ?? null;
   }
 
+  function boardBodyFor(boardId) {
+    const boardLayer = boardLayerFor(boardId);
+    return boardLayer?.closest(".card__body--board") ?? null;
+  }
+
+  function clampBoardPan(board, boardBody = boardBodyFor(board.id)) {
+    const rect = boardBody?.getBoundingClientRect();
+    const viewportWidthUnits = rect ? rect.width / (GRID_SIZE * state.zoom) : 0;
+    const viewportHeightUnits = rect ? rect.height / (GRID_SIZE * state.zoom) : 0;
+
+    board.boardPanX = Math.min(Math.max(0, BOARD_CONTENT_WIDTH_UNITS - viewportWidthUnits), Math.max(0, board.boardPanX ?? 0));
+    board.boardPanY = Math.min(Math.max(0, BOARD_CONTENT_HEIGHT_UNITS - viewportHeightUnits), Math.max(0, board.boardPanY ?? 0));
+  }
+
+  function updateBoardLayerPan(board) {
+    const boardLayer = boardLayerFor(board.id);
+    const boardBody = boardBodyFor(board.id);
+    if (!boardLayer) {
+      render();
+      return;
+    }
+
+    boardLayer.style.transform = `translate(${-board.boardPanX * GRID_SIZE}px, ${-board.boardPanY * GRID_SIZE}px)`;
+    if (boardBody) {
+      boardBody.style.backgroundPosition = `${-board.boardPanX * GRID_SIZE}px ${-board.boardPanY * GRID_SIZE}px`;
+    }
+  }
+
   function pointerToBoardUnits(event, parentId = null) {
     if (parentId) {
       const boardLayer = boardLayerFor(parentId);
@@ -401,11 +438,11 @@
     const blockedIds = descendantIds(draggedCardId);
     blockedIds.add(draggedCardId);
 
-    return [...document.querySelectorAll(".board-layer")]
-      .map((layer) => {
-        const boardId = layer.dataset.boardId;
+    return [...document.querySelectorAll(".card__body--board")]
+      .map((body) => {
+        const boardId = body.querySelector(".board-layer")?.dataset.boardId;
         const board = state.cards.find((card) => card.id === boardId && card.type === "board");
-        const rect = layer.getBoundingClientRect();
+        const rect = body.getBoundingClientRect();
         return { board, rect };
       })
       .filter(
@@ -435,13 +472,14 @@
     card.parentId = board.id;
     card.x = Math.max(0, position.x);
     card.y = Math.max(0, position.y);
+    clampBoardChildCard(card);
   }
 
   function isDroppedPastParentBoardLeftEdge(card, event) {
     if (!card.parentId) return false;
 
-    const boardLayer = boardLayerFor(card.parentId);
-    const rect = boardLayer?.getBoundingClientRect();
+    const boardBody = boardBodyFor(card.parentId);
+    const rect = boardBody?.getBoundingClientRect();
     return Boolean(rect && event.clientX < rect.left);
   }
 
@@ -462,8 +500,8 @@
   }
 
   function isPointerInsideBoard(boardId, event) {
-    const boardLayer = boardLayerFor(boardId);
-    const rect = boardLayer?.getBoundingClientRect();
+    const boardBody = boardBodyFor(boardId);
+    const rect = boardBody?.getBoundingClientRect();
 
     return Boolean(
       rect &&
@@ -513,6 +551,23 @@
     dashboard.setPointerCapture(event.pointerId);
   }
 
+  function startBoardPan(event, board, boardBody) {
+    event.preventDefault();
+    event.stopPropagation();
+    clampBoardPan(board, boardBody);
+    state.activeInteraction = {
+      type: "board-pan",
+      pointerId: event.pointerId,
+      boardId: board.id,
+      startClientX: event.clientX,
+      startClientY: event.clientY,
+      startBoardPanX: board.boardPanX ?? 0,
+      startBoardPanY: board.boardPanY ?? 0,
+    };
+    boardBody.classList.add("is-panning");
+    boardBody.setPointerCapture(event.pointerId);
+  }
+
   function handleDashboardWheel(event) {
     if (event.target.closest(".util-modal, .config-modal")) return;
     event.preventDefault();
@@ -535,6 +590,11 @@
     const bodyElement = event.target.closest(".card__body");
     if (card.type === "text" && bodyElement?.closest(".card") === cardElement) {
       saveStoredState();
+      return;
+    }
+
+    if (card.type === "board" && bodyElement?.closest(".card") === cardElement) {
+      startBoardPan(event, card, bodyElement);
       return;
     }
 
@@ -617,6 +677,17 @@
       return;
     }
 
+    if (interaction.type === "board-pan") {
+      const board = state.cards.find((item) => item.id === interaction.boardId && item.type === "board");
+      if (!board) return;
+
+      board.boardPanX = interaction.startBoardPanX - (event.clientX - interaction.startClientX) / (GRID_SIZE * state.zoom);
+      board.boardPanY = interaction.startBoardPanY - (event.clientY - interaction.startClientY) / (GRID_SIZE * state.zoom);
+      clampBoardPan(board);
+      updateBoardLayerPan(board);
+      return;
+    }
+
     const card = state.cards.find((item) => item.id === interaction.cardId);
     if (!card) return;
 
@@ -629,8 +700,7 @@
       card.y = interaction.startY + deltaY;
 
       if (card.parentId) {
-        card.x = Math.max(0, card.x);
-        card.y = Math.max(0, card.y);
+        clampBoardChildCard(card);
       } else {
         clampDashboardCard(card);
       }
@@ -647,16 +717,32 @@
       if (interaction.resizeAxis !== "x") {
         card.height = Math.max(MIN_CARD_HEIGHT_UNITS, interaction.startHeight + deltaY);
       }
-      clampDashboardCard(card);
+      if (card.parentId) {
+        clampBoardChildCard(card);
+      } else {
+        clampDashboardCard(card);
+      }
     }
 
     updateCardElementFrame(card);
+    if (interaction.type === "resize" && card.type === "board") {
+      clampBoardPan(card);
+      updateBoardLayerPan(card);
+    }
   }
 
   function endInteraction(event) {
     const interaction = state.activeInteraction;
     if (!interaction || event.pointerId !== interaction.pointerId) return;
     dashboard.classList.remove("is-panning");
+
+    if (interaction.type === "board-pan") {
+      boardBodyFor(interaction.boardId)?.classList.remove("is-panning");
+      saveStoredState();
+      state.activeInteraction = null;
+      render();
+      return;
+    }
 
     if (interaction.type === "move") {
       const card = state.cards.find((item) => item.id === interaction.cardId);
@@ -770,7 +856,7 @@
       const parentId = card.id === data.rootId || !sourceIds.has(card.parentId) ? null : idMap.get(card.parentId);
       const position = card.id === data.rootId ? rootPosition : null;
       const importedCard = normalizeImportedCard(card, idMap.get(card.id), parentId, position);
-      return clampDashboardCard(importedCard);
+      return parentId ? clampBoardChildCard(importedCard) : clampDashboardCard(importedCard);
     });
 
     state.cards.push(...importedCards);

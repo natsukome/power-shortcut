@@ -557,6 +557,11 @@ textarea {
   background-size: var(--grid-size) var(--grid-size);
   cursor: default;
   user-select: none;
+  touch-action: none;
+}
+
+.card__body--board.is-panning {
+  cursor: grabbing;
 }
 
 .grid-layer.is-grid-hidden .card__body--board {
@@ -565,8 +570,8 @@ textarea {
 
 .board-layer {
   position: relative;
-  width: 100%;
-  height: 100%;
+  transform-origin: left top;
+  will-change: transform;
 }
 
 .board-drop-hint {

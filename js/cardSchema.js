@@ -2,6 +2,8 @@
   const {
     DEFAULT_CARD_HEIGHT_UNITS,
     DEFAULT_CARD_WIDTH_UNITS,
+    BOARD_CONTENT_HEIGHT_UNITS,
+    BOARD_CONTENT_WIDTH_UNITS,
     CARD_TYPE_DEFS,
     MIN_CARD_HEIGHT_UNITS,
     MIN_CARD_WIDTH_UNITS,
@@ -32,6 +34,8 @@
       y: position?.y ?? (Number.isFinite(Number(card.y)) ? Number(card.y) : 0),
       width: Math.max(MIN_CARD_WIDTH_UNITS, Number(card.width) || DEFAULT_CARD_WIDTH_UNITS),
       height: Math.max(MIN_CARD_HEIGHT_UNITS, Number(card.height) || DEFAULT_CARD_HEIGHT_UNITS),
+      boardPanX: type === "board" ? Math.min(BOARD_CONTENT_WIDTH_UNITS, Math.max(0, Number(card.boardPanX) || 0)) : 0,
+      boardPanY: type === "board" ? Math.min(BOARD_CONTENT_HEIGHT_UNITS, Math.max(0, Number(card.boardPanY) || 0)) : 0,
     };
   }
 

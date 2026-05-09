@@ -1,5 +1,14 @@
 (function initRender(app) {
-  const { CARD_LAYER_OFFSET, CARD_TYPES, CARD_TYPE_DEFS, DASHBOARD_HEIGHT_UNITS, DASHBOARD_WIDTH_UNITS, GRID_SIZE } = app.constants;
+  const {
+    BOARD_CONTENT_HEIGHT_UNITS,
+    BOARD_CONTENT_WIDTH_UNITS,
+    CARD_LAYER_OFFSET,
+    CARD_TYPES,
+    CARD_TYPE_DEFS,
+    DASHBOARD_HEIGHT_UNITS,
+    DASHBOARD_WIDTH_UNITS,
+    GRID_SIZE,
+  } = app.constants;
   const {
     cardConfigModal,
     cardContextMenu,
@@ -266,9 +275,13 @@
 
     if (card.type === "board") {
       body.className = "card__body card__body--board";
+      body.style.backgroundPosition = `${-card.boardPanX * GRID_SIZE}px ${-card.boardPanY * GRID_SIZE}px`;
       const boardLayer = document.createElement("div");
       boardLayer.className = "board-layer";
       boardLayer.dataset.boardId = card.id;
+      boardLayer.style.width = `${BOARD_CONTENT_WIDTH_UNITS * GRID_SIZE}px`;
+      boardLayer.style.height = `${BOARD_CONTENT_HEIGHT_UNITS * GRID_SIZE}px`;
+      boardLayer.style.transform = `translate(${-card.boardPanX * GRID_SIZE}px, ${-card.boardPanY * GRID_SIZE}px)`;
       boardLayer.append(
         ...state.cards.filter((child) => child.parentId === card.id).map((child) => createCardElement(child)),
       );

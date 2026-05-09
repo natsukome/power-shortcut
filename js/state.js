@@ -1,5 +1,7 @@
 (function initState(app) {
   const {
+    BOARD_CONTENT_HEIGHT_UNITS,
+    BOARD_CONTENT_WIDTH_UNITS,
     STORAGE_KEY,
     ZOOM_MAX,
     ZOOM_MIN,
@@ -32,6 +34,10 @@
     },
   };
 
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
   function applyStateData(storedState) {
     const cards = Array.isArray(storedState.cards) ? storedState.cards : [];
     const pan = storedState.pan ?? {};
@@ -45,6 +51,18 @@
       ...card,
       parentId: restoredIds.has(card.parentId) ? card.parentId : null,
     }));
+    state.cards = state.cards.map((card) => {
+      if (card.parentId === null) return card;
+      const width = Math.min(BOARD_CONTENT_WIDTH_UNITS, card.width);
+      const height = Math.min(BOARD_CONTENT_HEIGHT_UNITS, card.height);
+      return {
+        ...card,
+        width,
+        height,
+        x: clamp(card.x, 0, Math.max(0, BOARD_CONTENT_WIDTH_UNITS - width)),
+        y: clamp(card.y, 0, Math.max(0, BOARD_CONTENT_HEIGHT_UNITS - height)),
+      };
+    });
 
     state.selectedId = restoredIds.has(storedState.selectedId) ? storedState.selectedId : null;
     state.pan = {
