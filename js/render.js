@@ -172,8 +172,9 @@
     const widthUnits = focusedBoard ? BOARD_CONTENT_WIDTH_UNITS : DASHBOARD_WIDTH_UNITS;
     const heightUnits = focusedBoard ? BOARD_CONTENT_HEIGHT_UNITS : DASHBOARD_HEIGHT_UNITS;
     const cards = state.cards.filter((card) => card.parentId === (focusedBoard?.id ?? null));
-    const maxWidth = 220;
-    const maxHeight = 120;
+    const isCompactViewport = window.matchMedia("(max-width: 720px)").matches;
+    const maxWidth = isCompactViewport ? 150 : 220;
+    const maxHeight = isCompactViewport ? 86 : 120;
     const scale = Math.min(maxWidth / widthUnits, maxHeight / heightUnits);
 
     miniMap.dataset.scope = focusedBoard ? "board" : "dashboard";
