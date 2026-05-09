@@ -1035,6 +1035,70 @@ textarea {
   padding: 0 8px;
 }
 
+#colorThemeInput option[value="slate"] {
+  color: #64748b;
+}
+
+#colorThemeInput option[value="zinc"] {
+  color: #52525b;
+}
+
+#colorThemeInput option[value="red"] {
+  color: #dc2626;
+}
+
+#colorThemeInput option[value="orange"] {
+  color: #c2410c;
+}
+
+#colorThemeInput option[value="amber"] {
+  color: #b45309;
+}
+
+#colorThemeInput option[value="yellow"] {
+  color: #a16207;
+}
+
+#colorThemeInput option[value="lime"] {
+  color: #4d7c0f;
+}
+
+#colorThemeInput option[value="green"] {
+  color: #15803d;
+}
+
+#colorThemeInput option[value="teal"] {
+  color: #0f766e;
+}
+
+#colorThemeInput option[value="cyan"] {
+  color: #0e7490;
+}
+
+#colorThemeInput option[value="sky"] {
+  color: #0369a1;
+}
+
+#colorThemeInput option[value="blue"] {
+  color: #2563eb;
+}
+
+#colorThemeInput option[value="indigo"] {
+  color: #4f46e5;
+}
+
+#colorThemeInput option[value="violet"] {
+  color: #7c3aed;
+}
+
+#colorThemeInput option[value="fuchsia"] {
+  color: #c026d3;
+}
+
+#colorThemeInput option[value="rose"] {
+  color: #e11d48;
+}
+
 .editor textarea {
   resize: vertical;
   min-height: 84px;
