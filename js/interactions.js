@@ -281,6 +281,11 @@
     miniMap.classList.add("is-hover-hidden");
   }
 
+  function hideMiniMapForPointer(event) {
+    if (event.pointerType === "mouse") return;
+    hideMiniMapWhileHovered();
+  }
+
   function restoreMiniMapAfterHover(event) {
     if (!miniMapHoverRect || !miniMap.classList.contains("is-hover-hidden")) return;
 
@@ -1249,6 +1254,7 @@
     gridToggleButton.addEventListener("click", toggleGridVisibility);
     miniMapToggleButton.addEventListener("click", toggleMiniMapVisibility);
     miniMap.addEventListener("mouseenter", hideMiniMapWhileHovered);
+    miniMap.addEventListener("pointerdown", hideMiniMapForPointer);
     zoomInButton.addEventListener("click", () => setZoom(state.zoom + ZOOM_STEP));
     zoomOutButton.addEventListener("click", () => setZoom(state.zoom - ZOOM_STEP));
     exportButton.addEventListener("click", exportDashboard);

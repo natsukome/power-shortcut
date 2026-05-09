@@ -26,6 +26,14 @@ body {
   margin: 0;
   overflow: hidden;
   background: #eef2f6;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@supports (height: 100dvh) {
+  html,
+  body {
+    height: 100dvh;
+  }
 }
 
 button,
@@ -814,8 +822,8 @@ textarea {
 
 .zoom-controls {
   position: fixed;
-  right: 20px;
-  bottom: 20px;
+  right: max(20px, env(safe-area-inset-right));
+  bottom: max(20px, env(safe-area-inset-bottom));
   z-index: 12;
   display: flex;
   gap: 6px;
@@ -850,8 +858,8 @@ textarea {
 
 .mini-map {
   position: fixed;
-  left: 20px;
-  bottom: 20px;
+  left: max(20px, env(safe-area-inset-left));
+  bottom: max(20px, env(safe-area-inset-bottom));
   z-index: 11;
   display: grid;
   place-items: center;
@@ -1318,20 +1326,39 @@ textarea {
   .util-modal,
   .config-modal {
     top: auto;
-    right: 10px;
-    left: 10px;
+    right: max(10px, env(safe-area-inset-right));
+    left: max(10px, env(safe-area-inset-left));
     width: auto;
     max-height: 48vh;
+    max-height: 48dvh;
   }
 
   .util-modal {
-    bottom: 10px;
+    bottom: max(10px, env(safe-area-inset-bottom));
   }
 
   .config-modal {
     bottom: auto;
     max-height: calc(100vh - 20px);
+    max-height: calc(100dvh - 20px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
     transform: none;
+  }
+
+  .zoom-controls {
+    right: max(10px, env(safe-area-inset-right));
+    bottom: max(10px, env(safe-area-inset-bottom));
+    gap: 8px;
+  }
+
+  .zoom-button {
+    width: 42px;
+    height: 42px;
+  }
+
+  .mini-map {
+    left: max(10px, env(safe-area-inset-left));
+    bottom: calc(max(10px, env(safe-area-inset-bottom)) + 50px);
+    max-width: calc(100vw - 20px - env(safe-area-inset-left) - env(safe-area-inset-right));
   }
 
   .util-modal__header,
@@ -1341,5 +1368,30 @@ textarea {
 
   .editor {
     padding: 12px;
+  }
+
+  .editor input,
+  .editor select,
+  .editor textarea {
+    font-size: 16px;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .card__action,
+  .card-context-menu__item,
+  .card-list__item,
+  .button,
+  .icon-button {
+    min-height: 40px;
+  }
+
+  .card__resize {
+    width: 28px;
+    height: 28px;
+  }
+
+  .card__resize--width {
+    width: 18px;
   }
 }
