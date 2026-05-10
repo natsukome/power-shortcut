@@ -2,6 +2,7 @@
   const {
     BOARD_CONTENT_HEIGHT_UNITS,
     BOARD_CONTENT_WIDTH_UNITS,
+    COLOR_THEME_ACCENTS,
     DASHBOARD_HEIGHT_UNITS,
     DASHBOARD_WIDTH_UNITS,
     GRID_SIZE,
@@ -10,24 +11,6 @@
   const { state } = app;
   const { isMobileViewport } = app.viewport;
   const { ICON_PATHS, createIcon } = app.icons;
-  const THEME_ACCENTS = {
-    slate: "#64748b",
-    zinc: "#52525b",
-    red: "#dc2626",
-    orange: "#c2410c",
-    amber: "#b45309",
-    yellow: "#a16207",
-    lime: "#4d7c0f",
-    green: "#15803d",
-    teal: "#0f766e",
-    cyan: "#0e7490",
-    sky: "#0369a1",
-    blue: "#2563eb",
-    indigo: "#4f46e5",
-    violet: "#7c3aed",
-    fuchsia: "#c026d3",
-    rose: "#e11d48",
-  };
 
   function focusedBoardForMiniMap() {
     let card = state.cards.find((item) => item.id === state.selectedId) ?? null;
@@ -73,7 +56,7 @@
 
   function createMiniMapFrame(card, widthUnits, heightUnits) {
     const frame = document.createElement("div");
-    const accent = THEME_ACCENTS[card.colorTheme] ?? THEME_ACCENTS.slate;
+    const accent = COLOR_THEME_ACCENTS[card.colorTheme] ?? COLOR_THEME_ACCENTS.slate;
 
     frame.className = `mini-map__frame${card.id === state.selectedId ? " is-focused" : ""}`;
     frame.style.left = `${(card.x / widthUnits) * 100}%`;
