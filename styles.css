@@ -1011,7 +1011,9 @@ textarea {
 }
 
 .search-section {
+  display: grid;
   padding: 10px 12px 0;
+  gap: 8px;
 }
 
 .search-field {
@@ -1056,6 +1058,72 @@ textarea {
 
 .search-field__clear.is-hidden {
   display: none;
+}
+
+.filter-field {
+  display: inline-flex;
+  justify-self: start;
+  color: #4b5568;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.filter-field select {
+  width: auto;
+  height: auto;
+  padding: 0 16px 2px 0;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  border-radius: 0;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.type-filter-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.type-filter-badges.is-hidden {
+  display: none;
+}
+
+.type-filter-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 3px 0 8px;
+  border: 1px solid rgba(22, 114, 91, 0.24);
+  border-radius: 6px;
+  background: rgba(22, 114, 91, 0.1);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+  gap: 5px;
+}
+
+.type-filter-badge__remove {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.type-filter-badge__remove:hover {
+  background: rgba(22, 114, 91, 0.14);
 }
 
 .icon-button {
@@ -1203,9 +1271,20 @@ textarea {
 
 .util-modal__footer {
   display: flex;
+  align-items: center;
   gap: 8px;
   padding: 10px 12px;
   border-top: 1px solid var(--panel-border);
+}
+
+.storage-indicator {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .card-list {

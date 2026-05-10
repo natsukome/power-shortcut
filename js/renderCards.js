@@ -241,10 +241,23 @@
     cardLayer.replaceChildren(createDashboardBounds(), ...dashboardCards.map((card) => createCardElement(card, true)));
   }
 
-  function cardListSearchVisibleIds() {
-    if (!state.searchResultIds) return null;
+  function filteredCardIds() {
+    const hasTextFilter = Boolean(state.searchResultIds);
+    const hasTypeFilter = state.cardTypeFilters.size > 0;
+    if (!hasTextFilter && !hasTypeFilter) return null;
 
-    const visibleIds = new Set(state.searchResultIds);
+    return new Set(
+      state.cards
+        .filter((card) => !hasTextFilter || state.searchResultIds.has(card.id))
+        .filter((card) => !hasTypeFilter || state.cardTypeFilters.has(card.type))
+        .map((card) => card.id),
+    );
+  }
+
+  function cardListVisibleIds(matchingIds) {
+    if (!matchingIds) return null;
+
+    const visibleIds = new Set(matchingIds);
     let didAddAncestor = true;
 
     while (didAddAncestor) {
@@ -260,9 +273,10 @@
   }
 
   function renderCardList() {
-    const visibleIds = cardListSearchVisibleIds();
-    const visibleCount = visibleIds ? state.searchResultIds.size : state.cards.length;
-    cardCount.textContent = visibleIds
+    const matchingIds = filteredCardIds();
+    const visibleIds = cardListVisibleIds(matchingIds);
+    const visibleCount = matchingIds ? matchingIds.size : state.cards.length;
+    cardCount.textContent = matchingIds
       ? `${visibleCount} ${visibleCount === 1 ? "match" : "matches"}`
       : `${state.cards.length} ${state.cards.length === 1 ? "card" : "cards"}`;
 
@@ -274,7 +288,7 @@
       return;
     }
 
-    if (visibleIds && state.searchResultIds.size === 0) {
+    if (matchingIds && matchingIds.size === 0) {
       const empty = document.createElement("div");
       empty.className = "card-list__meta";
       empty.textContent = "No matches.";

@@ -1,6 +1,15 @@
 (function initRender(app) {
   const { CARD_TYPES, DASHBOARD_HEIGHT_UNITS, DASHBOARD_WIDTH_UNITS, GRID_SIZE } = app.constants;
-  const { cardSearchInput, clearSearchButton, dashboardToast, gridLayer, gridToggleButton, typeInput } = app.dom;
+  const {
+    cardSearchInput,
+    cardTypeFilterBadges,
+    cardTypeFilterInput,
+    clearSearchButton,
+    dashboardToast,
+    gridLayer,
+    gridToggleButton,
+    typeInput,
+  } = app.dom;
   const { state } = app;
   const { ICON_PATHS, createIcon } = app.icons;
   const { renderCardList, renderCards } = app.renderCards;
@@ -8,6 +17,20 @@
   const { renderCardContextMenu, renderConfigModal, renderImportModal, renderUtilModal } = app.renderModals;
 
   function initializeTypeOptions() {
+    const addTypeOption = document.createElement("option");
+    addTypeOption.value = "";
+    addTypeOption.textContent = "Card type filter";
+
+    cardTypeFilterInput.replaceChildren(
+      addTypeOption,
+      ...CARD_TYPES.map((cardType) => {
+        const option = document.createElement("option");
+        option.value = cardType.id;
+        option.textContent = cardType.label;
+        return option;
+      }),
+    );
+
     typeInput.replaceChildren(
       ...CARD_TYPES.map((cardType) => {
         const option = document.createElement("option");
@@ -61,7 +84,34 @@
     if (cardSearchInput.value !== state.searchText) {
       cardSearchInput.value = state.searchText;
     }
+    cardTypeFilterInput.value = "";
+    [...cardTypeFilterInput.options].forEach((option) => {
+      option.disabled = Boolean(option.value && state.cardTypeFilters.has(option.value));
+    });
+    renderCardTypeFilterBadges();
     clearSearchButton.classList.toggle("is-hidden", state.searchText.length <= 1);
+  }
+
+  function renderCardTypeFilterBadges() {
+    const badges = [...state.cardTypeFilters].map((type) => {
+      const cardType = CARD_TYPES.find((item) => item.id === type);
+      const badge = document.createElement("span");
+      const text = document.createElement("span");
+      const removeButton = document.createElement("button");
+
+      badge.className = "type-filter-badge";
+      text.textContent = cardType?.label ?? type;
+      removeButton.type = "button";
+      removeButton.className = "type-filter-badge__remove";
+      removeButton.dataset.cardType = type;
+      removeButton.setAttribute("aria-label", `Remove ${text.textContent} filter`);
+      removeButton.textContent = "x";
+      badge.append(text, removeButton);
+      return badge;
+    });
+
+    cardTypeFilterBadges.classList.toggle("is-hidden", badges.length === 0);
+    cardTypeFilterBadges.replaceChildren(...badges);
   }
 
   function renderToast() {

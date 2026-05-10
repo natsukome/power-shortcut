@@ -21,6 +21,8 @@
     cardLayer,
     cardList,
     cardSearchInput,
+    cardTypeFilterBadges,
+    cardTypeFilterInput,
     clearSearchButton,
     closeConfigButton,
     closeImportButton,
@@ -52,7 +54,7 @@
   const { state } = app;
   const { defaultColorTheme, normalizeCardData } = app.cardSchema;
   const { copySecretCard, copyText } = app.clipboard;
-  const { saveStoredState, importStateData } = app.storage;
+  const { saveStoredState, importStateData, storedStateData } = app.storage;
   const { isMobileViewport } = app.viewport;
   const { render, renderConfigModal, applyPan, clampPan } = app.rendering;
   const {
@@ -1092,16 +1094,7 @@
   }
 
   async function exportDashboard() {
-    const data = JSON.stringify({
-      cards: state.cards,
-      selectedId: state.selectedId,
-      collapsedBoardIds: [...state.collapsedBoardIds],
-      collapsedBoardCardIds: [...state.collapsedBoardCardIds],
-      pan: state.pan,
-      zoom: state.zoom,
-      showGrid: state.showGrid,
-      showMiniMap: state.showMiniMap,
-    });
+    const data = JSON.stringify(storedStateData());
 
     try {
       await copyText(data);
@@ -1462,6 +1455,19 @@
     cardSearchInput.addEventListener("input", () => {
       state.searchText = cardSearchInput.value;
       scheduleCardSearch();
+    });
+    cardTypeFilterInput.addEventListener("input", () => {
+      if (VALID_CARD_TYPES.has(cardTypeFilterInput.value)) {
+        state.cardTypeFilters.add(cardTypeFilterInput.value);
+      }
+      cardTypeFilterInput.value = "";
+      render();
+    });
+    cardTypeFilterBadges.addEventListener("click", (event) => {
+      const removeButton = event.target.closest("[data-card-type]");
+      if (!removeButton) return;
+      state.cardTypeFilters.delete(removeButton.dataset.cardType);
+      render();
     });
     clearSearchButton.addEventListener("click", clearCardSearch);
 

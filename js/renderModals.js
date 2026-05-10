@@ -21,6 +21,7 @@
     saveConfigButton,
     secretField,
     secretInput,
+    storageIndicator,
     titleInput,
     typeField,
     typeInput,
@@ -35,6 +36,36 @@
   function renderUtilModal() {
     utilModal.classList.toggle("is-mobile-open", state.utilModalOpen);
     mobileUtilButton.setAttribute("aria-expanded", String(state.utilModalOpen));
+    renderStorageIndicator();
+  }
+
+  function formatBytes(bytes) {
+    if (!Number.isFinite(bytes)) return "Unknown";
+    if (bytes < 1024) return `${bytes} B`;
+    const units = ["KB", "MB", "GB"];
+    let value = bytes / 1024;
+    let unitIndex = 0;
+    while (value >= 1024 && unitIndex < units.length - 1) {
+      value /= 1024;
+      unitIndex += 1;
+    }
+    const precision = value >= 10 || unitIndex === 0 ? 1 : 2;
+    return `${value.toFixed(precision)} ${units[unitIndex]}`;
+  }
+
+  function renderStorageIndicator() {
+    const { appBytes, usageBytes, quotaBytes, remainingBytes } = state.storageEstimate;
+    const usedPercent = quotaBytes > 0 ? Math.min(100, (appBytes / quotaBytes) * 100) : 0;
+    const label = `${usedPercent < 0.1 && appBytes > 0 ? "<0.1" : usedPercent.toFixed(1)}% used`;
+    const quotaLabel = `${formatBytes(quotaBytes)} assumed localStorage quota`;
+    const title = [
+      `UtilPage data: ${formatBytes(appBytes)} of ${quotaLabel}.`,
+      `Origin usage: ${formatBytes(usageBytes)}.`,
+      `Remaining: ${formatBytes(remainingBytes)}.`,
+    ].join(" ");
+
+    storageIndicator.textContent = label;
+    storageIndicator.title = title;
   }
 
   function renderConfigModal() {

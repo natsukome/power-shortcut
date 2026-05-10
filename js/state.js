@@ -2,6 +2,7 @@
   const {
     BOARD_CONTENT_HEIGHT_UNITS,
     BOARD_CONTENT_WIDTH_UNITS,
+    LOCAL_STORAGE_FALLBACK_QUOTA_BYTES,
     STORAGE_KEY,
     ZOOM_MAX,
     ZOOM_MIN,
@@ -15,6 +16,7 @@
     collapsedBoardCardIds: new Set(),
     toastMessage: "",
     searchText: "",
+    cardTypeFilters: new Set(),
     searchResultIds: null,
     searchResultFields: new Map(),
     configMode: null,
@@ -30,6 +32,13 @@
     zoom: 1,
     showGrid: true,
     showMiniMap: true,
+    storageEstimate: {
+      usageBytes: 0,
+      quotaBytes: LOCAL_STORAGE_FALLBACK_QUOTA_BYTES,
+      remainingBytes: null,
+      appBytes: 0,
+      isQuotaFallback: true,
+    },
     pan: {
       x: window.innerWidth / 2,
       y: window.innerHeight / 2,
@@ -103,26 +112,64 @@
     applyStateData(data);
   }
 
+  function storedStateData() {
+    return {
+      cards: state.cards,
+      selectedId: state.selectedId,
+      collapsedBoardIds: [...state.collapsedBoardIds],
+      collapsedBoardCardIds: [...state.collapsedBoardCardIds],
+      pan: state.pan,
+      zoom: state.zoom,
+      showGrid: state.showGrid,
+      showMiniMap: state.showMiniMap,
+    };
+  }
+
+  function byteSize(value) {
+    const text = String(value ?? "");
+    if (typeof Blob === "function") return new Blob([text]).size;
+    return text.length * 2;
+  }
+
+  function localStorageUsageBytes() {
+    let total = 0;
+    for (let index = 0; index < localStorage.length; index += 1) {
+      const key = localStorage.key(index);
+      total += byteSize(key) + byteSize(localStorage.getItem(key));
+    }
+    return total;
+  }
+
+  function updateStorageEstimate() {
+    const appBytes = byteSize(STORAGE_KEY) + byteSize(localStorage.getItem(STORAGE_KEY));
+    const usageBytes = localStorageUsageBytes();
+    const quotaBytes = LOCAL_STORAGE_FALLBACK_QUOTA_BYTES;
+
+    state.storageEstimate = {
+      appBytes,
+      usageBytes,
+      quotaBytes,
+      remainingBytes: Math.max(0, quotaBytes - usageBytes),
+      isQuotaFallback: true,
+    };
+  }
+
+  function refreshStorageEstimate() {
+    updateStorageEstimate();
+    return Promise.resolve(state.storageEstimate);
+  }
+
   function saveStoredState() {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        cards: state.cards,
-        selectedId: state.selectedId,
-        collapsedBoardIds: [...state.collapsedBoardIds],
-        collapsedBoardCardIds: [...state.collapsedBoardCardIds],
-        pan: state.pan,
-        zoom: state.zoom,
-        showGrid: state.showGrid,
-        showMiniMap: state.showMiniMap,
-      }),
-    );
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(storedStateData()));
+    refreshStorageEstimate();
   }
 
   app.state = state;
   app.storage = {
+    refreshStorageEstimate,
     loadStoredState,
     saveStoredState,
     importStateData,
+    storedStateData,
   };
 })(window.UtilPage ??= {});
