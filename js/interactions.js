@@ -35,6 +35,8 @@
     importButton,
     localLinkModeInput,
     localPathInput,
+    mobileAddCardButton,
+    mobileUtilButton,
     miniMap,
     miniMapToggleButton,
     saveConfigButton,
@@ -42,6 +44,7 @@
     titleInput,
     typeInput,
     urlInput,
+    utilModal,
     widthInput,
     zoomInButton,
     zoomOutButton,
@@ -67,8 +70,16 @@
   const { searchCards } = app.searchModel;
   const PARTIAL_EXPORT_TYPE = "utilpage.partial-card.v1";
   const SEARCH_DEBOUNCE_MS = 500;
+  const LONG_PRESS_MS = 550;
+  const LONG_PRESS_MOVE_TOLERANCE = 10;
   let searchTimerId = null;
   let miniMapHoverRect = null;
+  let longPress = null;
+  let suppressNextClick = false;
+
+  function isSmartphoneViewport() {
+    return window.matchMedia("(max-width: 720px)").matches;
+  }
 
   function normalizeUrl(url) {
     const trimmedUrl = url.trim();
@@ -342,6 +353,16 @@
     titleInput.select();
   }
 
+  function closeMobileUtilModal() {
+    utilModal.classList.remove("is-mobile-open");
+    mobileUtilButton.setAttribute("aria-expanded", "false");
+  }
+
+  function toggleMobileUtilModal() {
+    const isOpen = utilModal.classList.toggle("is-mobile-open");
+    mobileUtilButton.setAttribute("aria-expanded", String(isOpen));
+  }
+
   function openEditConfig(cardId) {
     const card = state.cards.find((item) => item.id === cardId);
     if (!card) return;
@@ -463,6 +484,22 @@
 
   function boardLayerFor(boardId) {
     return [...document.querySelectorAll(".board-layer")].find((layer) => layer.dataset.boardId === boardId) ?? null;
+  }
+
+  function cancelLongPress() {
+    if (!longPress) return;
+    window.clearTimeout(longPress.timerId);
+    longPress = null;
+  }
+
+  function cancelActiveInteraction() {
+    if (state.activeInteraction?.type === "board-pan") {
+      boardBodyFor(state.activeInteraction.boardId)?.classList.remove("is-panning");
+    }
+    dashboard.classList.remove("is-panning");
+    state.activeInteraction = null;
+    state.dropTargetBoardId = null;
+    state.exitHintBoardId = null;
   }
 
   function boardBodyFor(boardId) {
@@ -1082,6 +1119,54 @@
     openCreateContextMenu(event);
   }
 
+  function showLongPressContextMenu(event) {
+    if (!isSmartphoneViewport()) return;
+    if (event.target.closest(".util-modal, .config-modal, .card-context-menu, .mobile-add-button, .mobile-util-button")) return;
+    if (event.target.closest("input, textarea, select, [contenteditable='true']")) return;
+
+    cancelActiveInteraction();
+
+    if (event.target.closest(".card__image")) {
+      showImageContextMenu(event);
+      return;
+    }
+
+    if (event.target.closest(".card__header")) {
+      showCardHeaderContextMenu(event);
+      return;
+    }
+
+    if (event.target.closest(".card-list__item")) {
+      showCardListContextMenu(event);
+      return;
+    }
+
+    showCreateContextMenu(event);
+  }
+
+  function startLongPress(event) {
+    if (!isSmartphoneViewport() || event.pointerType === "mouse" || event.button !== 0) return;
+    cancelLongPress();
+    longPress = {
+      pointerId: event.pointerId,
+      startClientX: event.clientX,
+      startClientY: event.clientY,
+      timerId: window.setTimeout(() => {
+        const press = longPress;
+        if (!press || press.pointerId !== event.pointerId) return;
+        longPress = null;
+        suppressNextClick = true;
+        showLongPressContextMenu(event);
+      }, LONG_PRESS_MS),
+    };
+  }
+
+  function updateLongPress(event) {
+    if (!longPress || event.pointerId !== longPress.pointerId) return;
+    const distance = Math.hypot(event.clientX - longPress.startClientX, event.clientY - longPress.startClientY);
+    if (distance > LONG_PRESS_MOVE_TOLERANCE) cancelLongPress();
+  }
+
   function handleContextMenuClick(event) {
     const button = event.target.closest("[data-action]");
     const menuState = state.contextMenu;
@@ -1232,6 +1317,18 @@
   }
 
   function attachEventHandlers() {
+    window.addEventListener(
+      "click",
+      (event) => {
+        if (!suppressNextClick) return;
+        suppressNextClick = false;
+        if (event.target.closest(".card-context-menu")) return;
+        event.preventDefault();
+        event.stopPropagation();
+      },
+      { capture: true },
+    );
+    window.addEventListener("pointerdown", startLongPress, { capture: true });
     dashboard.addEventListener("pointerdown", startDashboardPan);
     dashboard.addEventListener("contextmenu", showCreateContextMenu);
     dashboard.addEventListener("wheel", handleDashboardWheel, { passive: false });
@@ -1242,11 +1339,19 @@
     cardLayer.addEventListener("contextmenu", showCardHeaderContextMenu);
     cardContextMenu.addEventListener("click", handleContextMenuClick);
     window.addEventListener("pointermove", moveInteraction);
+    window.addEventListener("pointermove", updateLongPress);
     window.addEventListener("pointermove", restoreMiniMapAfterHover);
     window.addEventListener("pointerup", endInteraction);
+    window.addEventListener("pointerup", cancelLongPress);
     window.addEventListener("pointercancel", endInteraction);
+    window.addEventListener("pointercancel", cancelLongPress);
 
     addCardButton.addEventListener("click", () => openCreateConfig());
+    mobileAddCardButton.addEventListener("click", () => {
+      closeMobileUtilModal();
+      openCreateConfig();
+    });
+    mobileUtilButton.addEventListener("click", toggleMobileUtilModal);
     closeConfigButton.addEventListener("click", closeConfig);
     cancelConfigButton.addEventListener("click", closeConfig);
     saveConfigButton.addEventListener("click", saveConfig);
@@ -1306,11 +1411,19 @@
         hideContextMenu(false);
         closeConfig();
         closeImportModal();
+        closeMobileUtilModal();
       }
     });
     window.addEventListener("keydown", handleGlobalShortcuts);
     window.addEventListener("pointerdown", (event) => {
       if (!event.target.closest(".card-context-menu")) hideContextMenu();
+      if (
+        isSmartphoneViewport() &&
+        utilModal.classList.contains("is-mobile-open") &&
+        !event.target.closest(".util-modal, .mobile-util-button")
+      ) {
+        closeMobileUtilModal();
+      }
     });
     window.addEventListener("resize", applyPan);
   }

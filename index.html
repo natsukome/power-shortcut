@@ -24,7 +24,10 @@
     <div id="dashboardToast" class="dashboard-toast is-hidden" role="status" aria-live="polite"></div>
     <nav id="cardContextMenu" class="card-context-menu is-hidden" aria-label="Card actions"></nav>
 
-    <aside class="util-modal" aria-label="Utility controls">
+    <button id="mobileUtilButton" class="mobile-util-button" type="button" aria-label="Open utility controls" aria-expanded="false">...</button>
+    <button id="mobileAddCardButton" class="mobile-add-button" type="button" aria-label="Add card">+</button>
+
+    <aside id="utilModal" class="util-modal" aria-label="Utility controls">
       <header class="util-modal__header">
         <div>
           <h1>UtilPage</h1>
