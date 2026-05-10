@@ -21,6 +21,7 @@
     draft: null,
     createTarget: null,
     contextMenu: null,
+    utilModalOpen: false,
     importModalOpen: false,
     importContent: "",
     activeInteraction: null,

@@ -44,7 +44,6 @@
     titleInput,
     typeInput,
     urlInput,
-    utilModal,
     widthInput,
     zoomInButton,
     zoomOutButton,
@@ -54,6 +53,7 @@
   const { defaultColorTheme, normalizeCardData } = app.cardSchema;
   const { copySecretCard, copyText } = app.clipboard;
   const { saveStoredState, importStateData } = app.storage;
+  const { isMobileViewport } = app.viewport;
   const { render, renderConfigModal, applyPan, clampPan } = app.rendering;
   const {
     clampDashboardCard,
@@ -65,7 +65,7 @@
     removeCardTree,
     selectedCard,
     snap,
-    syncDraftFromInputs,
+    syncDraftFromValues,
   } = app.cardModel;
   const { searchCards } = app.searchModel;
   const PARTIAL_EXPORT_TYPE = "utilpage.partial-card.v1";
@@ -78,10 +78,6 @@
   let suppressNextClick = false;
   const activeTouchPointers = new Map();
   let pinchGesture = null;
-
-  function isSmartphoneViewport() {
-    return window.matchMedia("(max-width: 720px)").matches;
-  }
 
   function normalizeUrl(url) {
     const trimmedUrl = url.trim();
@@ -356,13 +352,13 @@
   }
 
   function closeMobileUtilModal() {
-    utilModal.classList.remove("is-mobile-open");
-    mobileUtilButton.setAttribute("aria-expanded", "false");
+    state.utilModalOpen = false;
+    render();
   }
 
   function toggleMobileUtilModal() {
-    const isOpen = utilModal.classList.toggle("is-mobile-open");
-    mobileUtilButton.setAttribute("aria-expanded", String(isOpen));
+    state.utilModalOpen = !state.utilModalOpen;
+    render();
   }
 
   function openEditConfig(cardId) {
@@ -416,10 +412,30 @@
     if (shouldRender) render();
   }
 
+  function readDraftFormValues() {
+    return {
+      type: typeInput.value,
+      title: titleInput.value,
+      colorTheme: colorThemeInput.value,
+      content: contentInput.value,
+      url: urlInput.value,
+      localPath: localPathInput.value,
+      localLinkMode: localLinkModeInput.value,
+      imagePath: imagePathInput.value,
+      secret: secretInput.value,
+      width: widthInput.value,
+      height: heightInput.value,
+    };
+  }
+
+  function syncDraftFromForm() {
+    syncDraftFromValues(readDraftFormValues());
+  }
+
   function saveConfig() {
     if (!state.configMode) return;
 
-    const draft = normalizeDraft();
+    const draft = normalizeDraft(readDraftFormValues());
 
     if (state.configMode === "create") {
       const target = state.createTarget ?? {};
@@ -516,7 +532,7 @@
   }
 
   function maybeStartPinchGesture() {
-    if (!isSmartphoneViewport() || activeTouchPointers.size !== 2) return;
+    if (!isMobileViewport() || activeTouchPointers.size !== 2) return;
 
     const [first, second] = [...activeTouchPointers.values()];
     const startDistance = touchPointDistance(first, second);
@@ -532,7 +548,7 @@
   }
 
   function trackPinchPointer(event) {
-    if (!isSmartphoneViewport() || event.pointerType === "mouse" || event.button !== 0) return;
+    if (!isMobileViewport() || event.pointerType === "mouse" || event.button !== 0) return;
     if (event.target.closest(".util-modal, .config-modal, .card-context-menu, .mobile-add-button, .mobile-util-button")) return;
 
     activeTouchPointers.set(event.pointerId, {
@@ -1188,7 +1204,7 @@
   }
 
   function showLongPressContextMenu(event) {
-    if (!isSmartphoneViewport()) return;
+    if (!isMobileViewport()) return;
     if (event.target.closest(".util-modal, .config-modal, .card-context-menu, .mobile-add-button, .mobile-util-button")) return;
     if (event.target.closest("input, textarea, select, [contenteditable='true']")) return;
 
@@ -1214,7 +1230,7 @@
 
   function startLongPress(event) {
     if (pinchGesture || activeTouchPointers.size > 1) return;
-    if (!isSmartphoneViewport() || event.pointerType === "mouse" || event.button !== 0) return;
+    if (!isMobileViewport() || event.pointerType === "mouse" || event.button !== 0) return;
     cancelLongPress();
     longPress = {
       pointerId: event.pointerId,
@@ -1450,19 +1466,19 @@
     clearSearchButton.addEventListener("click", clearCardSearch);
 
     typeInput.addEventListener("input", () => {
-      syncDraftFromInputs();
+      syncDraftFromForm();
       renderConfigModal();
     });
-    colorThemeInput.addEventListener("input", syncDraftFromInputs);
-    titleInput.addEventListener("input", syncDraftFromInputs);
-    contentInput.addEventListener("input", syncDraftFromInputs);
-    urlInput.addEventListener("input", syncDraftFromInputs);
-    localPathInput.addEventListener("input", syncDraftFromInputs);
-    localLinkModeInput.addEventListener("input", syncDraftFromInputs);
-    imagePathInput.addEventListener("input", syncDraftFromInputs);
-    secretInput.addEventListener("input", syncDraftFromInputs);
-    widthInput.addEventListener("input", syncDraftFromInputs);
-    heightInput.addEventListener("input", syncDraftFromInputs);
+    colorThemeInput.addEventListener("input", syncDraftFromForm);
+    titleInput.addEventListener("input", syncDraftFromForm);
+    contentInput.addEventListener("input", syncDraftFromForm);
+    urlInput.addEventListener("input", syncDraftFromForm);
+    localPathInput.addEventListener("input", syncDraftFromForm);
+    localLinkModeInput.addEventListener("input", syncDraftFromForm);
+    imagePathInput.addEventListener("input", syncDraftFromForm);
+    secretInput.addEventListener("input", syncDraftFromForm);
+    widthInput.addEventListener("input", syncDraftFromForm);
+    heightInput.addEventListener("input", syncDraftFromForm);
 
     cardList.addEventListener("click", (event) => {
       const item = event.target.closest(".card-list__item");
@@ -1491,8 +1507,8 @@
     window.addEventListener("pointerdown", (event) => {
       if (!event.target.closest(".card-context-menu")) hideContextMenu();
       if (
-        isSmartphoneViewport() &&
-        utilModal.classList.contains("is-mobile-open") &&
+        isMobileViewport() &&
+        state.utilModalOpen &&
         !event.target.closest(".util-modal, .mobile-util-button")
       ) {
         closeMobileUtilModal();

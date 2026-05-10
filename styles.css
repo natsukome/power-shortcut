@@ -450,7 +450,7 @@ textarea {
 }
 
 .card__actions {
-  display: none;
+  display: flex;
   flex: 0 0 auto;
   gap: 3px;
   opacity: 0;
@@ -461,7 +461,6 @@ textarea {
 
 .card__header:hover > .card__actions,
 .card:focus-within > .card__header > .card__actions {
-  display: flex;
   opacity: 1;
   pointer-events: auto;
 }
@@ -1327,6 +1326,7 @@ textarea {
   line-height: 1;
 }
 
+/* Keep this in sync with MOBILE_BREAKPOINT_PX in js/constants.js. */
 @media (max-width: 720px) {
   .util-modal,
   .config-modal {

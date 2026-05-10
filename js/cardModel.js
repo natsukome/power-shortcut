@@ -14,19 +14,6 @@
     VALID_COLOR_THEMES,
     VALID_CARD_TYPES,
   } = app.constants;
-  const {
-    colorThemeInput,
-    contentInput,
-    heightInput,
-    imagePathInput,
-    localLinkModeInput,
-    localPathInput,
-    secretInput,
-    titleInput,
-    typeInput,
-    urlInput,
-    widthInput,
-  } = app.dom;
   const { state } = app;
   const { defaultColorTheme, normalizeCardData } = app.cardSchema;
 
@@ -51,26 +38,26 @@
     };
   }
 
-  function normalizeDraft() {
-    const type = VALID_CARD_TYPES.has(typeInput.value) ? typeInput.value : "text";
+  function normalizeDraft(values) {
+    const type = VALID_CARD_TYPES.has(values?.type) ? values.type : "text";
     return {
       type,
-      title: titleInput.value.trim() || "Untitled",
-      colorTheme: VALID_COLOR_THEMES.has(colorThemeInput.value) ? colorThemeInput.value : "slate",
-      content: type === "text" ? contentInput.value : "",
-      url: type === "link" ? urlInput.value.trim() : "",
-      localPath: type === "local-link" ? localPathInput.value.trim() : "",
-      localLinkMode: type === "local-link" && localLinkModeInput.value === "text" ? "text" : "app",
-      imagePath: type === "image" ? imagePathInput.value.trim() : "",
-      secret: type === "secret" ? secretInput.value : "",
-      width: Math.max(MIN_CARD_WIDTH_UNITS, Number(widthInput.value) || DEFAULT_CARD_WIDTH_UNITS),
-      height: Math.max(MIN_CARD_HEIGHT_UNITS, Number(heightInput.value) || DEFAULT_CARD_HEIGHT_UNITS),
+      title: String(values?.title ?? "").trim() || "Untitled",
+      colorTheme: VALID_COLOR_THEMES.has(values?.colorTheme) ? values.colorTheme : "slate",
+      content: type === "text" ? String(values?.content ?? "") : "",
+      url: type === "link" ? String(values?.url ?? "").trim() : "",
+      localPath: type === "local-link" ? String(values?.localPath ?? "").trim() : "",
+      localLinkMode: type === "local-link" && values?.localLinkMode === "text" ? "text" : "app",
+      imagePath: type === "image" ? String(values?.imagePath ?? "").trim() : "",
+      secret: type === "secret" ? String(values?.secret ?? "") : "",
+      width: Math.max(MIN_CARD_WIDTH_UNITS, Number(values?.width) || DEFAULT_CARD_WIDTH_UNITS),
+      height: Math.max(MIN_CARD_HEIGHT_UNITS, Number(values?.height) || DEFAULT_CARD_HEIGHT_UNITS),
     };
   }
 
-  function syncDraftFromInputs() {
+  function syncDraftFromValues(values) {
     if (!state.draft) return;
-    state.draft = normalizeDraft();
+    state.draft = normalizeDraft(values);
   }
 
   function clamp(value, min, max) {
@@ -213,6 +200,6 @@
     removeCardTree,
     selectedCard,
     snap,
-    syncDraftFromInputs,
+    syncDraftFromValues,
   };
 })(window.UtilPage ??= {});
