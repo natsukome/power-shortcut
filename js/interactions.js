@@ -76,6 +76,8 @@
   let miniMapHoverRect = null;
   let longPress = null;
   let suppressNextClick = false;
+  const activeTouchPointers = new Map();
+  let pinchGesture = null;
 
   function isSmartphoneViewport() {
     return window.matchMedia("(max-width: 720px)").matches;
@@ -502,6 +504,69 @@
     state.exitHintBoardId = null;
   }
 
+  function touchPointDistance(first, second) {
+    return Math.hypot(first.clientX - second.clientX, first.clientY - second.clientY);
+  }
+
+  function touchPointCenter(first, second) {
+    return {
+      x: (first.clientX + second.clientX) / 2,
+      y: (first.clientY + second.clientY) / 2,
+    };
+  }
+
+  function maybeStartPinchGesture() {
+    if (!isSmartphoneViewport() || activeTouchPointers.size !== 2) return;
+
+    const [first, second] = [...activeTouchPointers.values()];
+    const startDistance = touchPointDistance(first, second);
+    if (startDistance < 12) return;
+
+    cancelLongPress();
+    cancelActiveInteraction();
+    hideContextMenu(false);
+    pinchGesture = {
+      startDistance,
+      startZoom: state.zoom,
+    };
+  }
+
+  function trackPinchPointer(event) {
+    if (!isSmartphoneViewport() || event.pointerType === "mouse" || event.button !== 0) return;
+    if (event.target.closest(".util-modal, .config-modal, .card-context-menu, .mobile-add-button, .mobile-util-button")) return;
+
+    activeTouchPointers.set(event.pointerId, {
+      clientX: event.clientX,
+      clientY: event.clientY,
+    });
+    maybeStartPinchGesture();
+  }
+
+  function updatePinchGesture(event) {
+    if (!activeTouchPointers.has(event.pointerId)) return;
+
+    activeTouchPointers.set(event.pointerId, {
+      clientX: event.clientX,
+      clientY: event.clientY,
+    });
+
+    if (!pinchGesture || activeTouchPointers.size !== 2) return;
+
+    event.preventDefault();
+    cancelLongPress();
+    const [first, second] = [...activeTouchPointers.values()];
+    const distance = Math.max(1, touchPointDistance(first, second));
+    const center = touchPointCenter(first, second);
+    setZoom(pinchGesture.startZoom * (pinchGesture.startDistance / distance), center.x, center.y);
+  }
+
+  function stopPinchPointer(event) {
+    if (!activeTouchPointers.delete(event.pointerId)) return;
+    if (activeTouchPointers.size < 2) {
+      pinchGesture = null;
+    }
+  }
+
   function boardBodyFor(boardId) {
     const boardLayer = boardLayerFor(boardId);
     return boardLayer?.closest(".card__body--board") ?? null;
@@ -636,6 +701,7 @@
   }
 
   function startDashboardPan(event) {
+    if (pinchGesture || activeTouchPointers.size > 1) return;
     if (event.button !== 0 || event.target.closest(".card, .util-modal, .config-modal, .card-context-menu")) return;
     state.selectedId = null;
     hideContextMenu(false);
@@ -676,6 +742,7 @@
   }
 
   function startCardInteraction(event) {
+    if (pinchGesture || activeTouchPointers.size > 1) return;
     const cardElement = event.target.closest(".card");
     if (!cardElement || event.button !== 0) return;
 
@@ -769,6 +836,7 @@
   }
 
   function moveInteraction(event) {
+    if (pinchGesture) return;
     const interaction = state.activeInteraction;
     if (!interaction || event.pointerId !== interaction.pointerId) return;
 
@@ -1145,6 +1213,7 @@
   }
 
   function startLongPress(event) {
+    if (pinchGesture || activeTouchPointers.size > 1) return;
     if (!isSmartphoneViewport() || event.pointerType === "mouse" || event.button !== 0) return;
     cancelLongPress();
     longPress = {
@@ -1328,6 +1397,7 @@
       },
       { capture: true },
     );
+    window.addEventListener("pointerdown", trackPinchPointer, { capture: true });
     window.addEventListener("pointerdown", startLongPress, { capture: true });
     dashboard.addEventListener("pointerdown", startDashboardPan);
     dashboard.addEventListener("contextmenu", showCreateContextMenu);
@@ -1339,11 +1409,14 @@
     cardLayer.addEventListener("contextmenu", showCardHeaderContextMenu);
     cardContextMenu.addEventListener("click", handleContextMenuClick);
     window.addEventListener("pointermove", moveInteraction);
+    window.addEventListener("pointermove", updatePinchGesture, { passive: false });
     window.addEventListener("pointermove", updateLongPress);
     window.addEventListener("pointermove", restoreMiniMapAfterHover);
     window.addEventListener("pointerup", endInteraction);
+    window.addEventListener("pointerup", stopPinchPointer);
     window.addEventListener("pointerup", cancelLongPress);
     window.addEventListener("pointercancel", endInteraction);
+    window.addEventListener("pointercancel", stopPinchPointer);
     window.addEventListener("pointercancel", cancelLongPress);
 
     addCardButton.addEventListener("click", () => openCreateConfig());
